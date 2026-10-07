@@ -1,0 +1,347 @@
+{
+  "Cybersecurity": [
+    {
+      "name": "Microsoft Defender XDR",
+      "url": "https://security.microsoft.com"
+    },
+    {
+      "name": "Microsoft Security Response Center",
+      "url": "https://msrc.microsoft.com"
+    },
+    {
+      "name": "VirusTotal",
+      "url": "https://www.virustotal.com"
+    },
+    {
+      "name": "Hybrid Analysis",
+      "url": "https://www.hybrid-analysis.com"
+    },
+    {
+      "name": "AbuseIPDB",
+      "url": "https://www.abuseipdb.com"
+    },
+    {
+      "name": "Cisco Talos",
+      "url": "https://talosintelligence.com"
+    },
+    {
+      "name": "Shodan",
+      "url": "https://www.shodan.io"
+    },
+    {
+      "name": "URLVoid",
+      "url": "https://www.urlvoid.com"
+    },
+    {
+      "name": "Have I Been Pwned",
+      "url": "https://haveibeenpwned.com"
+    },
+    {
+      "name": "MITRE ATT&CK",
+      "url": "https://attack.mitre.org"
+    },
+    {
+      "name": "NIST",
+      "url": "https://www.nist.gov"
+    },
+    {
+      "name": "CISA",
+      "url": "https://www.cisa.gov"
+    }
+  ],
+
+  "Networking": [
+    {
+      "name": "IPinfo",
+      "url": "https://ipinfo.io"
+    },
+    {
+      "name": "WhatIsMyIP",
+      "url": "https://whatismyipaddress.com"
+    },
+    {
+      "name": "MXToolbox",
+      "url": "https://mxtoolbox.com"
+    },
+    {
+      "name": "DNS Checker",
+      "url": "https://dnschecker.org"
+    },
+    {
+      "name": "Speedtest",
+      "url": "https://www.speedtest.net"
+    },
+    {
+      "name": "Cloudflare Radar",
+      "url": "https://radar.cloudflare.com"
+    },
+    {
+      "name": "BGP.he.net",
+      "url": "https://bgp.he.net"
+    },
+    {
+      "name": "Wireshark",
+      "url": "https://www.wireshark.org"
+    },
+    {
+      "name": "PacketLife",
+      "url": "https://packetlife.net"
+    }
+  ],
+
+  "Cloud Platforms": [
+    {
+      "name": "Microsoft Azure",
+      "url": "https://portal.azure.com"
+    },
+    {
+      "name": "AWS Console",
+      "url": "https://console.aws.amazon.com"
+    },
+    {
+      "name": "Google Cloud Console",
+      "url": "https://console.cloud.google.com"
+    },
+    {
+      "name": "Oracle Cloud",
+      "url": "https://cloud.oracle.com"
+    },
+    {
+      "name": "Cloudflare Dashboard",
+      "url": "https://dash.cloudflare.com"
+    },
+    {
+      "name": "DigitalOcean",
+      "url": "https://cloud.digitalocean.com"
+    },
+    {
+      "name": "Linode",
+      "url": "https://cloud.linode.com"
+    },
+    {
+      "name": "Vultr",
+      "url": "https://my.vultr.com"
+    }
+  ],
+
+  "Remote Support": [
+    {
+      "name": "Microsoft Quick Assist",
+      "url": "https://support.microsoft.com/windows/quick-assist"
+    },
+    {
+      "name": "AnyDesk",
+      "url": "https://my.anydesk.com"
+    },
+    {
+      "name": "TeamViewer",
+      "url": "https://web.teamviewer.com"
+    },
+    {
+      "name": "RustDesk",
+      "url": "https://rustdesk.com"
+    },
+    {
+      "name": "Chrome Remote Desktop",
+      "url": "https://remotedesktop.google.com"
+    },
+    {
+      "name": "Splashtop",
+      "url": "https://my.splashtop.com"
+    }
+  ],
+
+  "Documentation": [
+    {
+      "name": "Microsoft Learn",
+      "url": "https://learn.microsoft.com"
+    },
+    {
+      "name": "PowerShell Documentation",
+      "url": "https://learn.microsoft.com/powershell"
+    },
+    {
+      "name": "Microsoft Graph",
+      "url": "https://learn.microsoft.com/graph"
+    },
+    {
+      "name": "MDN Web Docs",
+      "url": "https://developer.mozilla.org"
+    },
+    {
+      "name": "DevDocs",
+      "url": "https://devdocs.io"
+    },
+    {
+      "name": "Read the Docs",
+      "url": "https://readthedocs.org"
+    },
+    {
+      "name": "AutoHotkey Docs",
+      "url": "https://www.autohotkey.com/docs/v2/"
+    },
+    {
+      "name": "PowerShell Gallery",
+      "url": "https://www.powershellgallery.com"
+    }
+  ],
+
+  "Learning": [
+    {
+      "name": "My Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/users/JonathanDecelles1990"
+    },
+    {
+      "name": "Microsoft Learn",
+      "url": "https://learn.microsoft.com"
+    },
+    {
+      "name": "LinkedIn Learning",
+      "url": "https://www.linkedin.com/learning"
+    },
+    {
+      "name": "freeCodeCamp",
+      "url": "https://www.freecodecamp.org"
+    },
+    {
+      "name": "Codecademy",
+      "url": "https://www.codecademy.com"
+    },
+    {
+      "name": "Coursera",
+      "url": "https://www.coursera.org"
+    },
+    {
+      "name": "Udemy",
+      "url": "https://www.udemy.com"
+    },
+    {
+      "name": "W3Schools",
+      "url": "https://www.w3schools.com"
+    },
+    {
+      "name": "Professor Messer",
+      "url": "https://www.professormesser.com"
+    }
+  ],
+
+  "Shopping": [
+    {
+      "name": "Amazon Canada",
+      "url": "https://www.amazon.ca"
+    },
+    {
+      "name": "Best Buy Canada",
+      "url": "https://www.bestbuy.ca"
+    },
+    {
+      "name": "Newegg Canada",
+      "url": "https://www.newegg.ca"
+    },
+    {
+      "name": "Canada Computers",
+      "url": "https://www.canadacomputers.com"
+    },
+    {
+      "name": "Memory Express",
+      "url": "https://www.memoryexpress.com"
+    },
+    {
+      "name": "Staples Canada",
+      "url": "https://www.staples.ca"
+    }
+  ],
+
+  "Finance": [
+    {
+      "name": "Wealthsimple",
+      "url": "https://my.wealthsimple.com"
+    },
+    {
+      "name": "Desjardins",
+      "url": "https://www.desjardins.com"
+    },
+    {
+      "name": "RBC",
+      "url": "https://www.rbcroyalbank.com"
+    },
+    {
+      "name": "BMO",
+      "url": "https://www.bmo.com"
+    },
+    {
+      "name": "CIBC",
+      "url": "https://www.cibc.com"
+    },
+    {
+      "name": "TD Canada Trust",
+      "url": "https://www.td.com"
+    }
+  ],
+
+  "Québec & Canada Government": [
+    {
+      "name": "Canada.ca",
+      "url": "https://www.canada.ca"
+    },
+    {
+      "name": "Service Canada",
+      "url": "https://www.canada.ca/en/employment-social-development/corporate/portfolio/service-canada.html"
+    },
+    {
+      "name": "CRA",
+      "url": "https://www.canada.ca/en/revenue-agency.html"
+    },
+    {
+      "name": "Revenu Québec",
+      "url": "https://www.revenuquebec.ca"
+    },
+    {
+      "name": "Québec.ca",
+      "url": "https://www.quebec.ca"
+    },
+    {
+      "name": "SAAQ",
+      "url": "https://saaq.gouv.qc.ca"
+    },
+    {
+      "name": "RAMQ",
+      "url": "https://www.ramq.gouv.qc.ca"
+    },
+    {
+      "name": "CNESST",
+      "url": "https://www.cnesst.gouv.qc.ca"
+    }
+  ],
+
+  "Housing": [
+    {
+      "name": "Tribunal administratif du logement",
+      "url": "https://www.tal.gouv.qc.ca"
+    },
+    {
+      "name": "Éducaloi",
+      "url": "https://educaloi.qc.ca"
+    },
+    {
+      "name": "CanLII",
+      "url": "https://www.canlii.org"
+    },
+    {
+      "name": "SOQUIJ",
+      "url": "https://soquij.qc.ca"
+    },
+    {
+      "name": "JuriBistro",
+      "url": "https://juribistro.ca"
+    },
+    {
+      "name": "Protecteur du citoyen",
+      "url": "https://protecteurducitoyen.qc.ca"
+    },
+    {
+      "name": "Commission des droits de la personne",
+      "url": "https://www.cdpdj.qc.ca"
+    }
+  ]
+}

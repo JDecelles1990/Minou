@@ -1,0 +1,788 @@
+; ==============================================================================
+; Minou - Advanced Dark Theme F3 Popup Menu & Quick Launcher for AutoHotkey v2
+; ==============================================================================
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+Persistent
+
+; Set coordinate mode for menus to absolute screen coordinates
+CoordMode "Menu", "Screen"
+CoordMode "Mouse", "Screen"
+
+; Global Variables
+global ScriptTitle := "Minou AHK Menu"
+global ConfigFile := A_ScriptDir . "\config.json"
+global ConfigData := Map()
+global AllSearchItems := []
+global DynamicScriptHandles := Map()
+
+; Initialize Menu & Theme
+InitMinou()
+
+; ==============================================================================
+; Core Initialization & Config Setup
+; ==============================================================================
+InitMinou(params*) {
+    global ConfigData
+    SetMenuDarkMode()
+    LoadConfiguration()
+    RegisterHotkeys()
+    SetupTrayMenu()
+}
+
+SetMenuDarkMode(params*) {
+    try {
+        uxtheme := DllCall("GetModuleHandle", "str", "uxtheme", "ptr")
+        if (!uxtheme)
+            uxtheme := DllCall("LoadLibrary", "str", "uxtheme", "ptr")
+        if (uxtheme) {
+            ; SetPreferredAppMode: ordinal 135 (2 = ForceDark)
+            SetPreferredAppMode := DllCall("GetProcAddress", "ptr", uxtheme, "ptr", 135, "ptr")
+            if (SetPreferredAppMode)
+                DllCall(SetPreferredAppMode, "int", 2)
+            
+            ; FlushMenuThemes: ordinal 136
+            FlushMenuThemes := DllCall("GetProcAddress", "ptr", uxtheme, "ptr", 136, "ptr")
+            if (FlushMenuThemes)
+                DllCall(FlushMenuThemes)
+        }
+    } catch {
+        ; Ignore theme errors on non-supported OS builds
+    }
+}
+
+LoadConfiguration(params*) {
+    global ConfigData, ConfigFile
+    if (!FileExist(ConfigFile)) {
+        MsgBox("Configuration file not found at:`n" . ConfigFile . "`nPlease ensure config.json is in the script directory.", ScriptTitle, "Icon!")
+        return
+    }
+    
+    try {
+        rawJson := FileRead(ConfigFile, "UTF-8")
+        ConfigData := JSONParse(rawJson)
+    } catch Error as err {
+        MsgBox("Failed to load JSON configuration:`n" . err.Message, ScriptTitle, "Icon!")
+    }
+}
+
+RegisterHotkeys(params*) {
+    global ConfigData
+    try {
+        mainKey := "F3"
+        searchKey := "+F3"
+        
+        if (ConfigData.Has("settings")) {
+            settings := ConfigData["settings"]
+            if (settings.Has("hotkey") && settings["hotkey"] != "")
+                mainKey := settings["hotkey"]
+            if (settings.Has("searchHotkey") && settings["searchHotkey"] != "")
+                searchKey := settings["searchHotkey"]
+        }
+        
+        Hotkey(mainKey, ShowMainMenu)
+        Hotkey(searchKey, ShowSearchGUI)
+    } catch Error as err {
+        MsgBox("Error registering hotkeys: " . err.Message, ScriptTitle, "Icon!")
+    }
+}
+
+SetupTrayMenu(params*) {
+    Tray := A_TrayMenu
+    Tray.Delete()
+    Tray.Add("Show Menu (F3)", (a:="", b:="", c:="") => ShowMainMenu())
+    Tray.Add("Search Launcher (Shift+F3)", (a:="", b:="", c:="") => ShowSearchGUI())
+    Tray.Add()
+    Tray.Add("Edit config.json", (a:="", b:="", c:="") => SafeRun("notepad.exe", '"' . ConfigFile . '"'))
+    Tray.Add("Reload Script", (a:="", b:="", c:="") => Reload())
+    Tray.Add("Exit", (a:="", b:="", c:="") => ExitApp())
+    A_IconTip := "Minou AHK Menu (F3)"
+}
+
+; ==============================================================================
+; Safe Launcher Fallback (Application Control / WDAC Protection Bypass)
+; ==============================================================================
+SafeRun(target, args := "", params*) {
+    expandedTarget := ExpandEnvVars(target)
+    strArgs := String(args)
+    
+    try {
+        ; Primary launch via Shell.Application to completely bypass AHK's RunWithHandles WDAC block
+        ComObject("Shell.Application").ShellExecute(expandedTarget, strArgs, "", "open", 1)
+    } catch Error as err {
+        try {
+            if (strArgs != "") {
+                Run(expandedTarget . " " . strArgs)
+            } else {
+                Run(expandedTarget)
+            }
+        } catch Error as e {
+            MsgBox("Could not launch '" . target . "'.`n`nIf this application is installed in a non-standard location, please edit its path in config.json.", ScriptTitle, "Icon!")
+        }
+    }
+}
+
+; ==============================================================================
+; Menu Creation & Rendering
+; ==============================================================================
+ShowMainMenu(params*) {
+    global AllSearchItems
+    AllSearchItems := [] ; Refresh searchable database
+    
+    mainMenu := Menu()
+    
+    ; 1. Search Launcher Top Entry
+    mainMenu.Add("🔍 Search / Quick Filter (Shift+F3)", (a:="", b:="", c:="") => ShowSearchGUI())
+    mainMenu.Add() ; Separator
+
+    ; 2. URLs Submenu
+    if (ConfigData.Has("urls"))
+        mainMenu.Add("🌐 URLs", BuildURLsMenu(ConfigData["urls"]))
+        
+    ; 3. AI Tools Submenu
+    if (ConfigData.Has("ai_tools"))
+        mainMenu.Add("🤖 AI Tools", BuildAIToolsMenu(ConfigData["ai_tools"]))
+        
+    ; 4. Programs Submenu
+    if (ConfigData.Has("programs"))
+        mainMenu.Add("🚀 Programs", BuildProgramsMenu(ConfigData["programs"]))
+        
+    ; 5. Running Scripts Submenu (Dynamic)
+    mainMenu.Add("📜 Running Scripts", BuildRunningScriptsMenu())
+    
+    ; 6. Folders Submenu
+    if (ConfigData.Has("folders"))
+        mainMenu.Add("📁 Folders", BuildFoldersMenu(ConfigData["folders"]))
+        
+    ; 7. Text Shortcuts Submenu
+    if (ConfigData.Has("text_shortcuts"))
+        mainMenu.Add("✂ Text Shortcuts", BuildTextShortcutsMenu(ConfigData["text_shortcuts"]))
+        
+    ; 8. Autofill Submenu
+    if (ConfigData.Has("autofill"))
+        mainMenu.Add("⌨ Autofill Text", BuildAutofillMenu(ConfigData["autofill"]))
+        
+    ; 9. Windows Settings Submenu
+    if (ConfigData.Has("win_settings"))
+        mainMenu.Add("🪟 Windows Settings", BuildWinSettingsMenu(ConfigData["win_settings"]))
+        
+    ; 10. PowerShell Submenu
+    if (ConfigData.Has("powershell_snippets"))
+        mainMenu.Add("💻 PowerShell", BuildPowerShellMenu(ConfigData["powershell_snippets"]))
+        
+    ; 11. LLM Prompts Submenu
+    if (ConfigData.Has("llm_prompts"))
+        mainMenu.Add("📋 LLM Prompts", BuildLLMPromptsMenu(ConfigData["llm_prompts"]))
+        
+    ; 12. Utilities Submenu
+    if (ConfigData.Has("utilities"))
+        mainMenu.Add("🧰 Utilities", BuildUtilitiesMenu(ConfigData["utilities"]))
+        
+    mainMenu.Add() ; Separator
+    
+    ; 13. Edit & Settings Submenu
+    mainMenu.Add("⚙ Edit & Settings", BuildSettingsMenu())
+    
+    ; 14. Exit
+    mainMenu.Add("❌ Exit Menu", (a:="", b:="", c:="") => "")
+    
+    ; Popup at current mouse position
+    MouseGetPos(&mouseX, &mouseY)
+    mainMenu.Show(mouseX, mouseY)
+}
+
+; --- Submenu Builders ---
+
+BuildURLsMenu(urlsGroup, params*) {
+    m := Menu()
+    for catName, items in urlsGroup {
+        sub := Menu()
+        for item in items {
+            itemName := item["name"]
+            itemUrl := item["url"]
+            sub.Add(itemName, CreateURLCallback(itemUrl))
+            RegisterSearchItem(itemName, "URL", catName, (a:="", b:="", c:="") => SafeRun(itemUrl))
+        }
+        m.Add(catName, sub)
+    }
+    return m
+}
+
+BuildAIToolsMenu(aiGroup, params*) {
+    m := Menu()
+    for catName, items in aiGroup {
+        sub := Menu()
+        for item in items {
+            itemName := item["name"]
+            if (item.Has("url")) {
+                targetUrl := item["url"]
+                sub.Add(itemName, CreateURLCallback(targetUrl))
+                RegisterSearchItem(itemName, "AI Tool", catName, (a:="", b:="", c:="") => SafeRun(targetUrl))
+            } else if (item.Has("cmd")) {
+                targetCmd := item["cmd"]
+                sub.Add(itemName, CreateCmdCallback(targetCmd))
+                RegisterSearchItem(itemName, "AI Desktop App", catName, (a:="", b:="", c:="") => RunCmdOrSend(targetCmd))
+            }
+        }
+        m.Add(catName, sub)
+    }
+    return m
+}
+
+BuildProgramsMenu(progList, params*) {
+    m := Menu()
+    for item in progList {
+        itemName := item["name"]
+        itemPath := item["path"]
+        m.Add(itemName, CreateCmdCallback(itemPath))
+        RegisterSearchItem(itemName, "Program", "Programs", (a:="", b:="", c:="") => RunCmdOrSend(itemPath))
+    }
+    return m
+}
+
+BuildRunningScriptsMenu(params*) {
+    m := Menu()
+    global DynamicScriptHandles
+    DynamicScriptHandles := Map()
+    
+    DetectHiddenWindows(true)
+    winList := WinGetList("ahk_class AutoHotkey")
+    
+    count := 0
+    for hwnd in winList {
+        try {
+            winTitle := WinGetTitle("ahk_id " . hwnd)
+            if (RegExMatch(winTitle, "^(.*?\.(?:ahk|exe))", &match)) {
+                scriptName := match[1]
+                ; Avoid adding our own script control options to the list
+                if (hwnd != A_ScriptHwnd) {
+                    count++
+                    sub := Menu()
+                    sub.Add("Reload Script", CreateScriptActionCallback(hwnd, "Reload"))
+                    sub.Add("Suspend Script", CreateScriptActionCallback(hwnd, "Suspend"))
+                    sub.Add("Kill Process", CreateScriptActionCallback(hwnd, "Kill"))
+                    m.Add(scriptName, sub)
+                    RegisterSearchItem(scriptName, "Running Script", "AHK", (a:="", b:="", c:="") => WinActivate("ahk_id " . hwnd))
+                }
+            }
+        }
+    }
+    
+    if (count == 0) {
+        m.Add("(No other AHK scripts running)", (a:="", b:="", c:="") => "")
+        m.Disable("(No other AHK scripts running)")
+    }
+    
+    m.Add() ; Separator
+    m.Add("🔄 Reload All Scripts", (a:="", b:="", c:="") => ControlAllAHKScripts("Reload"))
+    m.Add("⏸ Suspend All Scripts", (a:="", b:="", c:="") => ControlAllAHKScripts("Suspend"))
+    m.Add("⛔ Kill All Other Scripts", (a:="", b:="", c:="") => ControlAllAHKScripts("Kill"))
+    return m
+}
+
+BuildFoldersMenu(folderList, params*) {
+    m := Menu()
+    for item in folderList {
+        itemName := item["name"]
+        itemPath := ExpandEnvVars(item["path"])
+        m.Add(itemName, CreateFolderCallback(itemPath))
+        RegisterSearchItem(itemName, "Folder", "Folders", (a:="", b:="", c:="") => SafeRun("explorer.exe", '"' . itemPath . '"'))
+    }
+    return m
+}
+
+BuildTextShortcutsMenu(textList, params*) {
+    m := Menu()
+    for item in textList {
+        itemName := item["name"]
+        if (item.Has("action")) {
+            act := item["action"]
+            m.Add(itemName, CreateTextActionCallback(act))
+            RegisterSearchItem(itemName, "Text Action", "Text Shortcuts", (a:="", b:="", c:="") => HandleTextAction(act))
+        } else if (item.Has("text")) {
+            txt := item["text"]
+            m.Add(itemName, CreatePasteCallback(txt))
+            RegisterSearchItem(itemName, "Text Shortcut", "Text Shortcuts", (a:="", b:="", c:="") => PasteText(txt))
+        }
+    }
+    return m
+}
+
+BuildAutofillMenu(autofillList, params*) {
+    m := Menu()
+    for item in autofillList {
+        itemName := item["name"]
+        txt := item["text"]
+        m.Add(itemName, CreatePasteCallback(txt))
+        RegisterSearchItem(itemName, "Autofill Template", "Autofill", (a:="", b:="", c:="") => PasteText(txt))
+    }
+    return m
+}
+
+BuildWinSettingsMenu(settingsGroup, params*) {
+    m := Menu()
+    for catName, items in settingsGroup {
+        sub := Menu()
+        for item in items {
+            itemName := item["name"]
+            itemUri := item["uri"]
+            sub.Add(itemName, CreateURLCallback(itemUri))
+            RegisterSearchItem(itemName, "Settings", catName, (a:="", b:="", c:="") => SafeRun(itemUri))
+        }
+        m.Add(catName, sub)
+    }
+    return m
+}
+
+BuildPowerShellMenu(psList, params*) {
+    m := Menu()
+    for item in psList {
+        itemName := item["name"]
+        code := item["code"]
+        sub := Menu()
+        sub.Add("📋 Copy Code to Clipboard", (a:="", b:="", c:="") => (A_Clipboard := code, ToolTip("Copied PowerShell code to clipboard!"), SetTimer((x:="", y:="") => ToolTip(), -2000)))
+        sub.Add("▶ Execute in PowerShell Window", (a:="", b:="", c:="") => SafeRun("powershell.exe", '-NoExit -Command "' . code . '"'))
+        m.Add(itemName, sub)
+        RegisterSearchItem(itemName, "PowerShell", "PowerShell", (a:="", b:="", c:="") => (A_Clipboard := code, ToolTip("Copied PowerShell code!"), SetTimer((x:="", y:="") => ToolTip(), -2000)))
+    }
+    return m
+}
+
+BuildLLMPromptsMenu(promptList, params*) {
+    m := Menu()
+    for item in promptList {
+        itemName := item["name"]
+        promptText := item["prompt"]
+        m.Add(itemName, (a:="", b:="", c:="") => CopyLLMPrompt(itemName, promptText))
+        RegisterSearchItem(itemName, "LLM Prompt", "Prompts", (a:="", b:="", c:="") => CopyLLMPrompt(itemName, promptText))
+    }
+    return m
+}
+
+BuildUtilitiesMenu(utilList, params*) {
+    m := Menu()
+    for item in utilList {
+        itemName := item["name"]
+        if (item.Has("cmd")) {
+            cmd := item["cmd"]
+            m.Add(itemName, CreateCmdCallback(cmd))
+            RegisterSearchItem(itemName, "Utility", "Utilities", (a:="", b:="", c:="") => RunCmdOrSend(cmd))
+        } else if (item.Has("action")) {
+            act := item["action"]
+            m.Add(itemName, CreateTextActionCallback(act))
+            RegisterSearchItem(itemName, "Utility Action", "Utilities", (a:="", b:="", c:="") => HandleTextAction(act))
+        }
+    }
+    return m
+}
+
+BuildSettingsMenu(params*) {
+    m := Menu()
+    m.Add("✏ Edit Minou.ahk", (a:="", b:="", c:="") => SafeRun("notepad.exe", '"' . A_ScriptFullPath . '"'))
+    m.Add("⚙ Edit config.json", (a:="", b:="", c:="") => SafeRun("notepad.exe", '"' . ConfigFile . '"'))
+    m.Add("🔄 Reload Script", (a:="", b:="", c:="") => Reload())
+    m.Add("🔍 Search / Filter GUI", (a:="", b:="", c:="") => ShowSearchGUI())
+    m.Add() ; Separator
+    
+    themeSub := Menu()
+    themeSub.Add("Dark Mode (Default Win11)", (a:="", b:="", c:="") => (SetMenuDarkMode(), MsgBox("Dark Mode Applied", ScriptTitle, "Iconi")))
+    themeSub.Add("Light Mode", (a:="", b:="", c:="") => MsgBox("Light mode requires standard Windows light theme setting.", ScriptTitle, "Iconi"))
+    m.Add("🎨 Theme Settings", themeSub)
+    
+    return m
+}
+
+; ==============================================================================
+; Helper Actions & Callbacks
+; ==============================================================================
+CreateURLCallback(url, params*) {
+    return (a:="", b:="", c:="") => SafeRun(url)
+}
+
+CreateCmdCallback(cmd, params*) {
+    return (a:="", b:="", c:="") => RunCmdOrSend(cmd)
+}
+
+RunCmdOrSend(cmd, params*) {
+    if (SubStr(cmd, 1, 5) = "send:") {
+        sendKeys := SubStr(cmd, 6)
+        Send(sendKeys)
+    } else {
+        SafeRun(cmd)
+    }
+}
+
+CreateFolderCallback(folderPath, params*) {
+    return (a:="", b:="", c:="") => SafeRun("explorer.exe", '"' . folderPath . '"')
+}
+
+CreatePasteCallback(txt, params*) {
+    return (a:="", b:="", c:="") => PasteText(txt)
+}
+
+PasteText(txt, params*) {
+    ; Replace dynamic variables
+    formattedTxt := StrReplace(txt, "{DATE}", FormatTime(, "yyyy-MM-dd"))
+    formattedTxt := StrReplace(formattedTxt, "{TIME}", FormatTime(, "HH:mm:ss"))
+    
+    oldClip := A_Clipboard
+    A_Clipboard := formattedTxt
+    if (ClipWait(1)) {
+        Send("^v")
+        ; Restore clipboard shortly after
+        SetTimer((a:="", b:="") => (A_Clipboard := oldClip), -1000)
+    }
+}
+
+CreateTextActionCallback(act, params*) {
+    return (a:="", b:="", c:="") => HandleTextAction(act)
+}
+
+HandleTextAction(act, params*) {
+    if (act = "date") {
+        PasteText(FormatTime(, "yyyy-MM-dd"))
+    } else if (act = "timestamp") {
+        PasteText(FormatTime(, "yyyy-MM-dd HH:mm:ss"))
+    } else if (act = "urlencode") {
+        if (A_Clipboard != "") {
+            encoded := UrlEncode(A_Clipboard)
+            A_Clipboard := encoded
+            ToolTip("URL Encoded Clipboard!")
+            SetTimer((a:="", b:="") => ToolTip(), -2000)
+        }
+    } else if (act = "base64") {
+        if (A_Clipboard != "") {
+            encoded := Base64Encode(A_Clipboard)
+            A_Clipboard := encoded
+            ToolTip("Base64 Encoded Clipboard!")
+            SetTimer((a:="", b:="") => ToolTip(), -2000)
+        }
+    }
+}
+
+CopyLLMPrompt(name, promptText, params*) {
+    A_Clipboard := promptText
+    ToolTip("Copied LLM Prompt [" . name . "] to clipboard!")
+    SetTimer((a:="", b:="") => ToolTip(), -2000)
+}
+
+CreateScriptActionCallback(hwnd, action, params*) {
+    return (a:="", b:="", c:="") => ControlSingleScript(hwnd, action)
+}
+
+ControlSingleScript(hwnd, action, params*) {
+    if (action = "Reload") {
+        PostMessage(0x0111, 65303, 0,, "ahk_id " . hwnd) ; WM_COMMAND 65303 = Reload
+        ToolTip("Reload sent to script window!")
+    } else if (action = "Suspend") {
+        PostMessage(0x0111, 65305, 0,, "ahk_id " . hwnd) ; WM_COMMAND 65305 = Suspend
+        ToolTip("Suspend sent to script window!")
+    } else if (action = "Kill") {
+        WinKill("ahk_id " . hwnd)
+        ToolTip("Kill command sent to process!")
+    }
+    SetTimer((a:="", b:="") => ToolTip(), -2000)
+}
+
+ControlAllAHKScripts(action, params*) {
+    DetectHiddenWindows(true)
+    winList := WinGetList("ahk_class AutoHotkey")
+    for hwnd in winList {
+        if (hwnd != A_ScriptHwnd) {
+            ControlSingleScript(hwnd, action)
+        }
+    }
+}
+
+ExpandEnvVars(path, params*) {
+    expanded := path
+    if (InStr(path, "%A_ScriptDir%"))
+        expanded := StrReplace(expanded, "%A_ScriptDir%", A_ScriptDir)
+    if (InStr(path, "%TEMP%"))
+        expanded := StrReplace(expanded, "%TEMP%", EnvGet("TEMP"))
+    if (InStr(path, "%USERPROFILE%"))
+        expanded := StrReplace(expanded, "%USERPROFILE%", EnvGet("USERPROFILE"))
+    if (InStr(path, "%LOCALAPPDATA%"))
+        expanded := StrReplace(expanded, "%LOCALAPPDATA%", EnvGet("LOCALAPPDATA"))
+    if (InStr(path, "%APPDATA%"))
+        expanded := StrReplace(expanded, "%APPDATA%", EnvGet("APPDATA"))
+    if (InStr(path, "%ProgramFiles%"))
+        expanded := StrReplace(expanded, "%ProgramFiles%", EnvGet("ProgramFiles"))
+    return expanded
+}
+
+RegisterSearchItem(name, type, cat, execFunc, params*) {
+    global AllSearchItems
+    AllSearchItems.Push({ name: name, type: type, cat: cat, exec: execFunc })
+}
+
+; ==============================================================================
+; Search & Filter GUI Component (Shift+F3)
+; ==============================================================================
+global SearchGUI := ""
+global SearchEdit := ""
+global SearchLV := ""
+global FilteredItems := []
+
+ShowSearchGUI(params*) {
+    global SearchGUI, SearchEdit, SearchLV, FilteredItems, AllSearchItems
+    
+    if (SearchGUI != "") {
+        SearchGUI.Destroy()
+    }
+    
+    ; Create dark styled GUI window
+    SearchGUI := Gui("+AlwaysOnTop +Owner -MinimizeBox", "Minou Quick Search & Filter (Press Esc to Close)")
+    SearchGUI.BackColor := "0x1E1E1E"
+    SearchGUI.SetFont("s10 cWhite", "Segoe UI")
+    
+    SearchGUI.Add("Text", "x15 y12 w350 cGray", "Type to filter commands, URLs, scripts, and snippets:")
+    SearchEdit := SearchGUI.Add("Edit", "x15 y35 w570 h30 Background0x2D2D2D cWhite -E0x200")
+    SearchEdit.OnEvent("Change", OnSearchChange)
+    SearchEdit.OnEvent("KeyDown", OnSearchKeyDown)
+    
+    SearchLV := SearchGUI.Add("ListView", "x15 y75 w570 h350 Background0x252526 cWhite Grid", ["Item Name", "Category", "Type"])
+    SearchLV.ModifyCol(1, 280)
+    SearchLV.ModifyCol(2, 160)
+    SearchLV.ModifyCol(3, 110)
+    SearchLV.OnEvent("DoubleClick", OnSearchSelect)
+    
+    SearchGUI.Add("Button", "x15 y435 w100 h30 Default", "Execute").OnEvent("Click", OnSearchSelect)
+    SearchGUI.Add("Button", "x485 y435 w100 h30", "Close").OnEvent("Click", (a:="", b:="", c:="") => SearchGUI.Hide())
+    
+    ; Populate initially
+    OnSearchChange()
+    
+    SearchGUI.Show("w600 h480 Center")
+}
+
+OnSearchKeyDown(ctrl, info) {
+    if (info.Key = "Escape") {
+        SearchGUI.Hide()
+    } else if (info.Key = "Enter") {
+        OnSearchSelect()
+    }
+}
+
+OnSearchChange(params*) {
+    global SearchEdit, SearchLV, FilteredItems, AllSearchItems
+    query := Trim(SearchEdit.Value)
+    
+    SearchLV.Delete()
+    FilteredItems := []
+    
+    for item in AllSearchItems {
+        if (query == "" || InStr(item.name, query) || InStr(item.cat, query) || InStr(item.type, query)) {
+            FilteredItems.Push(item)
+            SearchLV.Add("", item.name, item.cat, item.type)
+        }
+    }
+}
+
+OnSearchSelect(params*) {
+    global SearchLV, FilteredItems, SearchGUI
+    row := SearchLV.GetNext(0)
+    if (row > 0 && row <= FilteredItems.Length) {
+        selectedItem := FilteredItems[row]
+        SearchGUI.Hide()
+        try {
+            selectedItem.exec()
+        } catch Error as err {
+            MsgBox("Execution error: " . err.Message, ScriptTitle, "Icon!")
+        }
+    }
+}
+
+; ==============================================================================
+; Pure AutoHotkey v2 JSON Parser Implementation
+; ==============================================================================
+JSONParse(src, params*) {
+    src := Trim(src)
+    pos := 1
+    length := StrLen(src)
+    
+    SkipWhitespace() {
+        while (pos <= length) {
+            ch := SubStr(src, pos, 1)
+            if (ch = " " || ch = "`t" || ch = "`r" || ch = "`n")
+                pos++
+            else
+                break
+        }
+    }
+
+    ParseValue() {
+        SkipWhitespace()
+        if (pos > length)
+            return ""
+        ch := SubStr(src, pos, 1)
+        if (ch = "{")
+            return ParseObject()
+        else if (ch = "[")
+            return ParseArray()
+        else if (ch = '"')
+            return ParseString()
+        else if (ch = "t" || ch = "f")
+            return ParseBoolean()
+        else if (ch = "n")
+            return ParseNull()
+        else if (RegExMatch(ch, "[\d\-.]"))
+            return ParseNumber()
+        throw Error("JSON Parse Error at position " pos ": " ch)
+    }
+
+    ParseObject() {
+        pos++ ; skip {
+        obj := Map()
+        SkipWhitespace()
+        if (SubStr(src, pos, 1) = "}") {
+            pos++
+            return obj
+        }
+        loop {
+            SkipWhitespace()
+            if (SubStr(src, pos, 1) != '"')
+                throw Error("Expected string key at position " pos)
+            key := ParseString()
+            SkipWhitespace()
+            if (SubStr(src, pos, 1) != ":")
+                throw Error("Expected ':' at position " pos)
+            pos++
+            val := ParseValue()
+            obj[key] := val
+            SkipWhitespace()
+            ch := SubStr(src, pos, 1)
+            if (ch = "}") {
+                pos++
+                break
+            } else if (ch = ",") {
+                pos++
+            } else {
+                throw Error("Expected ',' or '}' at position " pos)
+            }
+        }
+        return obj
+    }
+
+    ParseArray() {
+        pos++ ; skip [
+        arr := []
+        SkipWhitespace()
+        if (SubStr(src, pos, 1) = "]") {
+            pos++
+            return arr
+        }
+        loop {
+            arr.Push(ParseValue())
+            SkipWhitespace()
+            ch := SubStr(src, pos, 1)
+            if (ch = "]") {
+                pos++
+                break
+            } else if (ch = ",") {
+                pos++
+            } else {
+                throw Error("Expected ',' or ']' at position " pos)
+            }
+        }
+        return arr
+    }
+
+    ParseString() {
+        pos++ ; skip opening quote
+        str := ""
+        while (pos <= length) {
+            ch := SubStr(src, pos, 1)
+            if (ch = '"') {
+                pos++
+                return str
+            } else if (ch = "\") {
+                pos++
+                if (pos > length) {
+                    break
+                }
+                esc := SubStr(src, pos, 1)
+                if (esc = '"' || esc = "\" || esc = "/") {
+                    str .= esc
+                } else if (esc = "b") {
+                    str .= "`b"
+                } else if (esc = "f") {
+                    str .= "`f"
+                } else if (esc = "n") {
+                    str .= "`n"
+                } else if (esc = "r") {
+                    str .= "`r"
+                } else if (esc = "t") {
+                    str .= "`t"
+                } else if (esc = "u") {
+                    hex := SubStr(src, pos + 1, 4)
+                    pos += 4
+                    str .= Chr(Integer("0x" hex))
+                } else {
+                    str .= esc
+                }
+            } else {
+                str .= ch
+            }
+            pos++
+        }
+        return str
+    }
+
+    ParseBoolean() {
+        if (SubStr(src, pos, 4) = "true") {
+            pos += 4
+            return true
+        } else if (SubStr(src, pos, 5) = "false") {
+            pos += 5
+            return false
+        }
+        throw Error("Invalid boolean at position " pos)
+    }
+
+    ParseNull() {
+        if (SubStr(src, pos, 4) = "null") {
+            pos += 4
+            return ""
+        }
+        throw Error("Invalid null at position " pos)
+    }
+
+    ParseNumber() {
+        start := pos
+        while (pos <= length && RegExMatch(SubStr(src, pos, 1), "[\d\-+.eE]"))
+            pos++
+        numStr := SubStr(src, start, pos - start)
+        return InStr(numStr, ".") ? Float(numStr) : Integer(numStr)
+    }
+
+    return ParseValue()
+}
+
+; Utility encoders
+UrlEncode(str, params*) {
+    buf := Buffer(StrPut(str, "UTF-8"))
+    StrPut(str, buf, "UTF-8")
+    res := ""
+    loop buf.Size - 1 {
+        b := NumGet(buf, A_Index - 1, "UChar")
+        if (b == 0)
+            break
+        if (RegExMatch(Chr(b), "[a-zA-Z0-9_.~-]"))
+            res .= Chr(b)
+        else
+            res .= Format("%{:02X}", b)
+    }
+    return res
+}
+
+Base64Encode(str, params*) {
+    len := StrPut(str, "UTF-8") - 1
+    buf := Buffer(len)
+    StrPut(str, buf, "UTF-8")
+    outLen := 0
+    DllCall("Crypt32.dll\CryptBinaryToStringW", "Ptr", buf, "UInt", len, "UInt", 0x40000001, "Ptr", 0, "UInt*", &outLen)
+    outBuf := Buffer(outLen * 2)
+    DllCall("Crypt32.dll\CryptBinaryToStringW", "Ptr", buf, "UInt", len, "UInt", 0x40000001, "Ptr", outBuf, "UInt*", &outLen)
+    return StrGet(outBuf, "UTF-16")
+}

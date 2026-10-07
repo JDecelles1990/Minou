@@ -1,0 +1,165 @@
+{
+  "settings": {
+    "hotkey": "F3",
+    "searchHotkey": "+F3",
+    "theme": "Dark",
+    "enableIcons": true,
+    "menuFontSize": 10,
+    "menuWidth": 400
+  },
+  "urls": {
+    "Search Engines": [
+      { "name": "Google", "url": "https://www.google.com" },
+      { "name": "Bing", "url": "https://www.bing.com" },
+      { "name": "DuckDuckGo", "url": "https://duckduckgo.com" }
+    ],
+    "Microsoft": [
+      { "name": "Copilot", "url": "https://copilot.microsoft.com" },
+      { "name": "Outlook", "url": "https://outlook.live.com" },
+      { "name": "OneDrive", "url": "https://onedrive.live.com" }
+    ],
+    "Development": [
+      { "name": "GitHub", "url": "https://github.com" },
+      { "name": "Stack Overflow", "url": "https://stackoverflow.com" },
+      { "name": "MDN Web Docs", "url": "https://developer.mozilla.org" }
+    ],
+    "Productivity": [
+      { "name": "Notion", "url": "https://www.notion.so" },
+      { "name": "Trello", "url": "https://trello.com" },
+      { "name": "Airtable", "url": "https://airtable.com" }
+    ],
+    "Media": [
+      { "name": "YouTube", "url": "https://www.youtube.com" },
+      { "name": "Spotify", "url": "https://open.spotify.com" }
+    ],
+    "User Custom URLs": [
+      { "name": "My Dashboard", "url": "https://localhost" }
+    ]
+  },
+  "ai_tools": {
+    "Web LLMs": [
+      { "name": "ChatGPT", "url": "https://chatgpt.com" },
+      { "name": "Microsoft Copilot", "url": "https://copilot.microsoft.com" },
+      { "name": "Claude", "url": "https://claude.ai" },
+      { "name": "Gemini", "url": "https://gemini.google.com" },
+      { "name": "Grok", "url": "https://x.ai" },
+      { "name": "Perplexity", "url": "https://www.perplexity.ai" },
+      { "name": "Poe", "url": "https://poe.com" },
+      { "name": "Mistral Le Chat", "url": "https://chat.mistral.ai" },
+      { "name": "DeepSeek", "url": "https://chat.deepseek.com" },
+      { "name": "OpenRouter", "url": "https://openrouter.ai" }
+    ],
+    "AI Desktop Apps": [
+      { "name": "LM Studio", "cmd": "LM Studio.exe" },
+      { "name": "Ollama Dashboard", "url": "http://localhost:11434" },
+      { "name": "GPT4All", "cmd": "gpt4all.exe" },
+      { "name": "AnythingLLM", "cmd": "AnythingLLM.exe" },
+      { "name": "Jan AI", "cmd": "jan.exe" },
+      { "name": "OpenWebUI", "url": "http://localhost:3000" },
+      { "name": "Continue", "cmd": "code --goto" },
+      { "name": "Cursor", "cmd": "cursor.exe" }
+    ]
+  },
+  "programs": [
+    { "name": "File Explorer", "path": "explorer.exe" },
+    { "name": "Windows Terminal", "path": "wt.exe" },
+    { "name": "PowerShell", "path": "powershell.exe" },
+    { "name": "VS Code", "path": "C:\\Program Files\\Microsoft VS Code\\Code.exe" },
+    { "name": "Notepad++", "path": "C:\\Program Files\\Notepad++\\notepad++.exe" },
+    { "name": "Obsidian", "path": "obsidian.exe" },
+    { "name": "Chrome", "path": "chrome.exe" },
+    { "name": "Edge", "path": "msedge.exe" },
+    { "name": "Firefox", "path": "firefox.exe" },
+    { "name": "Everything", "path": "Everything.exe" },
+    { "name": "ShareX", "path": "ShareX.exe" },
+    { "name": "Paint.NET", "path": "paintdotnet.exe" }
+  ],
+  "folders": [
+    { "name": "Documents", "path": "shell:Personal" },
+    { "name": "Downloads", "path": "shell:Downloads" },
+    { "name": "Desktop", "path": "shell:Desktop" },
+    { "name": "Pictures", "path": "shell:My Music" },
+    { "name": "Videos", "path": "shell:My Video" },
+    { "name": "Music", "path": "shell:My Pictures" },
+    { "name": "OneDrive", "path": "%USERPROFILE%\\OneDrive" },
+    { "name": "Projects", "path": "%USERPROFILE%\\Projects" },
+    { "name": "AI", "path": "%USERPROFILE%\\AI" },
+    { "name": "Scripts", "path": "%A_ScriptDir%" },
+    { "name": "Temp", "path": "%TEMP%" }
+  ],
+  "text_shortcuts": [
+    { "name": "Email Address", "text": "user@example.com" },
+    { "name": "Full Name", "text": "John Doe" },
+    { "name": "Address", "text": "123 Main Street, Suite 100, City, State 12345" },
+    { "name": "Phone Number", "text": "+1 (555) 019-2834" },
+    { "name": "Signature", "text": "Best regards,\nJohn Doe" },
+    { "name": "Today's Date", "action": "date" },
+    { "name": "Timestamp", "action": "timestamp" }
+  ],
+  "autofill": [
+    { "name": "Common Responses", "text": "Thank you for contacting us. We have received your inquiry and will respond within 24 business hours." },
+    { "name": "Support Templates", "text": "Hello,\n\nPlease verify that your system satisfies the following requirements:\n1. Latest AHK v2 installed\n2. Windows 11 / 10 x64\n\nLet us know if the issue persists." },
+    { "name": "Meeting Notes", "text": "## Meeting Agenda\n- Date: {DATE}\n- Attendees: \n- Key Action Items:\n  1. \n  2. \n" },
+    { "name": "Coding Templates", "text": "try {\n    // Implementation\n} catch Exception as err {\n    MsgBox(\"Error: \" . err.Message)\n}" },
+    { "name": "SQL Templates", "text": "SELECT TOP 100 *\nFROM TableName WITH (NOLOCK)\nWHERE CreatedDate >= DATEADD(day, -7, GETDATE());" },
+    { "name": "Markdown Templates", "text": "# Title\n\n## Overview\n\n- Point 1\n- Point 2\n" }
+  ],
+  "win_settings": {
+    "System": [
+      { "name": "Display", "uri": "ms-settings:display" },
+      { "name": "Sound", "uri": "ms-settings:sound" },
+      { "name": "Notifications", "uri": "ms-settings:notifications" }
+    ],
+    "Personalization": [
+      { "name": "Themes", "uri": "ms-settings:themes" },
+      { "name": "Colors", "uri": "ms-settings:colors" }
+    ],
+    "Apps": [
+      { "name": "Installed Apps", "uri": "ms-settings:appsfeatures" },
+      { "name": "Default Apps", "uri": "ms-settings:defaultapps" }
+    ],
+    "Gaming": [
+      { "name": "Game Mode", "uri": "ms-settings:gaming-gamemode" }
+    ],
+    "Privacy": [
+      { "name": "Privacy Overview", "uri": "ms-settings:privacy" }
+    ],
+    "Network": [
+      { "name": "Network Status", "uri": "ms-settings:network-status" },
+      { "name": "Wi-Fi", "uri": "ms-settings:network-wifi" }
+    ],
+    "Advanced": [
+      { "name": "Windows Update", "uri": "ms-settings:windowsupdate" }
+    ]
+  },
+  "powershell_snippets": [
+    { "name": "Get Processes", "code": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 15 Name, Id, CPU, WorkingSet" },
+    { "name": "Running Services", "code": "Get-Service | Where-Object Status -eq 'Running' | Sort-Object DisplayName" },
+    { "name": "Network Info", "code": "Get-NetIPAddress | Where-Object AddressFamily -eq 'IPv4' | Select-Object InterfaceAlias, IPAddress" },
+    { "name": "IP Config", "code": "ipconfig /all" },
+    { "name": "Installed Apps", "code": "Get-ItemProperty HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion" },
+    { "name": "Event Log Query", "code": "Get-EventLog -LogName System -EntryType Error -Newest 10" },
+    { "name": "Restart Explorer", "code": "Stop-Process -Name explorer -Force" },
+    { "name": "File Search", "code": "Get-ChildItem -Path C:\\ -Filter '*.log' -Recurse -ErrorAction SilentlyContinue" },
+    { "name": "Kill Process", "code": "Stop-Process -Name 'ProcessName' -Force" }
+  ],
+  "llm_prompts": [
+    { "name": "Debug Code", "prompt": "Analyze this code and identify bugs, performance issues, and security vulnerabilities. Provide step-by-step refactoring recommendations:\n\n" },
+    { "name": "Summarize", "prompt": "Summarize the following text into concise, actionable bullet points with clear headings:\n\n" },
+    { "name": "Writing Assistant", "prompt": "Polish the following text for clarity, tone, conciseness, and professionalism without losing key information:\n\n" },
+    { "name": "Research Synthesizer", "prompt": "Examine the following topic/text and synthesize key insights, trade-offs, and open questions:\n\n" },
+    { "name": "Translation", "prompt": "Translate the following text to natural, fluent English preserving technical nuances:\n\n" },
+    { "name": "AutoHotkey v2 Expert", "prompt": "Act as an AutoHotkey v2 expert. Provide clean, modern AHK v2 code (using #Requires AutoHotkey v2.0) with robust error handling for the following requirement:\n\n" }
+  ],
+  "utilities": [
+    { "name": "Clipboard History", "cmd": "send:#v" },
+    { "name": "Character Map", "cmd": "charmap.exe" },
+    { "name": "Calculator", "cmd": "calc.exe" },
+    { "name": "Screenshot", "cmd": "send:#+s" },
+    { "name": "Screen Recorder", "cmd": "send:#+r" },
+    { "name": "Color Picker", "cmd": "send:#+c" },
+    { "name": "Timestamp Generator", "action": "timestamp" },
+    { "name": "URL Encoder", "action": "urlencode" },
+    { "name": "Base64 Encode", "action": "base64" }
+  ]
+}

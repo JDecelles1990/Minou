@@ -1,0 +1,127 @@
+[
+  {
+    "category": "General",
+    "name": "Summarize",
+    "prompt": "Summarize the following text into concise bullet points with clear headings, key takeaways, and action items.\n\n"
+  },
+  {
+    "category": "General",
+    "name": "Explain Simply",
+    "prompt": "Explain the following topic as if teaching someone new to the subject. Use plain language, examples, and avoid unnecessary jargon.\n\n"
+  },
+  {
+    "category": "General",
+    "name": "Improve Writing",
+    "prompt": "Rewrite the following text to improve grammar, clarity, readability, and professionalism while preserving the original meaning.\n\n"
+  },
+  {
+    "category": "General",
+    "name": "Translate",
+    "prompt": "Translate the following text while preserving tone, formatting, and technical terminology.\n\n"
+  },
+  {
+    "category": "Programming",
+    "name": "Debug Code",
+    "prompt": "Analyze the following code for syntax errors, logic bugs, edge cases, security issues, and performance improvements. Explain each issue step by step and provide corrected code.\n\n"
+  },
+  {
+    "category": "Programming",
+    "name": "Explain Code",
+    "prompt": "Explain what the following code does line by line. Assume the reader is a beginner and include practical examples.\n\n"
+  },
+  {
+    "category": "Programming",
+    "name": "Refactor Code",
+    "prompt": "Refactor the following code using best practices. Improve readability, maintainability, and performance without changing its behavior.\n\n"
+  },
+  {
+    "category": "PowerShell",
+    "name": "PowerShell Script",
+    "prompt": "Write a PowerShell script for the following task. Explain every command, parameter, and expected output so that a beginner can understand it.\n\n"
+  },
+  {
+    "category": "PowerShell",
+    "name": "PowerShell Troubleshooting",
+    "prompt": "Analyze the following PowerShell script or error message. Explain the likely cause, how to troubleshoot it, and provide a corrected version if necessary.\n\n"
+  },
+  {
+    "category": "AutoHotkey",
+    "name": "AHK v2 Script",
+    "prompt": "Write clean, modern AutoHotkey v2 code for the following task. Use functions, comments, error handling, and follow AutoHotkey v2 best practices.\n\n"
+  },
+  {
+    "category": "AutoHotkey",
+    "name": "Optimize AHK",
+    "prompt": "Review the following AutoHotkey v2 script. Suggest improvements for performance, maintainability, readability, and reliability.\n\n"
+  },
+  {
+    "category": "Helpdesk",
+    "name": "Troubleshooting Workflow",
+    "prompt": "Act as a senior IT Helpdesk technician. Create a structured troubleshooting workflow with likely causes, verification steps, PowerShell commands, and escalation criteria.\n\n"
+  },
+  {
+    "category": "Helpdesk",
+    "name": "Ticket Notes",
+    "prompt": "Convert the following troubleshooting notes into professional ticket documentation using a clear chronological format.\n\n"
+  },
+  {
+    "category": "Microsoft 365",
+    "name": "M365 Admin",
+    "prompt": "Act as a Microsoft 365 administrator. Explain how to troubleshoot the following issue using the Microsoft 365 Admin Center, Entra ID, Exchange Admin Center, Defender, and PowerShell where applicable.\n\n"
+  },
+  {
+    "category": "Networking",
+    "name": "Network Troubleshooting",
+    "prompt": "Analyze the following networking issue. Explain possible causes using the OSI model, suggest troubleshooting steps, PowerShell/CMD commands, and expected results.\n\n"
+  },
+  {
+    "category": "Cybersecurity",
+    "name": "Security Analysis",
+    "prompt": "Analyze the following security incident. Identify risks, indicators of compromise, mitigation steps, and recommended best practices.\n\n"
+  },
+  {
+    "category": "Research",
+    "name": "Research Assistant",
+    "prompt": "Research the following topic thoroughly. Organize the response with headings, comparisons, advantages, disadvantages, and reliable references.\n\n"
+  },
+  {
+    "category": "Prompt Engineering",
+    "name": "Improve Prompt",
+    "prompt": "Rewrite the following AI prompt to maximize clarity, context, reliability, and output quality. Explain why the improvements make the prompt better.\n\n"
+  },
+  {
+    "category": "Documents",
+    "name": "Professional Email",
+    "prompt": "Write a professional email based on the following information. Use a clear subject, concise wording, and a polite but direct tone.\n\n"
+  },
+  {
+    "category": "Excel",
+    "name": "Excel Formula",
+    "prompt": "Create the best Excel formula for the following task. Explain each function used and provide alternative approaches if applicable.\n\n"
+  },
+  {
+    "category": "JSON",
+    "name": "Validate JSON",
+    "prompt": "Validate the following JSON. Identify syntax errors, formatting issues, duplicate keys, and suggest improvements while preserving the intended structure.\n\n"
+  },
+  {
+    "category": "Markdown",
+    "name": "Markdown Formatter",
+    "prompt": "Convert the following text into clean Markdown with proper headings, tables, code blocks, lists, and formatting.\n\n"
+  },
+  {
+    "category": "Learning",
+    "name": "Study Guide",
+    "prompt": "Create a complete study guide for the following topic. Include explanations, key concepts, examples, quizzes, and practical exercises.\n\n"
+  },
+  {
+    "category": "Interview",
+    "name": "Mock Interview",
+    "prompt": "Act as an interviewer. Ask realistic interview questions one at a time, evaluate my answers, explain what I did well, and suggest improvements.\n\n"
+  },
+  {
+    "category": "Brainstorming",
+    "name": "Generate Ideas",
+    "prompt": "Generate creative ideas for the following topic. Organize them from easiest to most advanced and explain the pros and cons of each.\n\n"
+  }
+]

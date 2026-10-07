@@ -1,0 +1,6 @@
+{
+    "Text": [
+        { "name": "Email Signature", "text": "Kind regards,{ENTER}{DATE}" },
+        { "name": "Timestamp", "text": "{TIME}" }
+    ]
+}
