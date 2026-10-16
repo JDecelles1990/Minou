@@ -1,0 +1,12 @@
+# User state & local temporary files
+Minou/state/
+*.tmp
+*.log
+
+# Windows thumbnail & desktop caches
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS artifacts
+.DS_Store

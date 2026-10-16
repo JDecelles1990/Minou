@@ -17,6 +17,7 @@ SettingsFile := ConfigDir . "\settings.json"
 UrlsFile := ConfigDir . "\urls.json"
 SnippetsFile := ConfigDir . "\snippets.json"
 PromptsFile := ConfigDir . "\prompts.json"
+UtilitiesFile := ConfigDir . "\utilities.json"
 HotstringFile := ConfigDir . "\hotstrings.json"
 ConfigData := Map()
 SettingsData := Map()
@@ -26,7 +27,7 @@ PromptData := Array()
 HotstringData := Array()
 ProgramData := Array()
 FolderData := Array()
-UtilityData := Array()
+UtilityData := Map()
 AllSearchItems := Array()
 LauncherGui := ""
 SearchBox := ""
@@ -36,6 +37,7 @@ CurrentEntries := Array()
 CurrentCategory := "All"
 
 #Include "Modules\Json.ahk"
+#Include "Modules\Utilities.ahk"
 #Include "Modules\MenuBuilder.ahk"
 #Include "Modules\Launcher.ahk"
 #Include "Modules\Hotstrings.ahk"
@@ -87,7 +89,12 @@ LoadConfiguration(*) {
 
     ProgramData := ConfigData["programs"]
     FolderData := ConfigData["folders"]
-    UtilityData := ConfigData["utilities"]
+
+    if (FileExist(UtilitiesFile)) {
+        UtilityData := LoadJsonFile(UtilitiesFile, Map())
+    } else {
+        UtilityData := ConfigData["utilities"]
+    }
 }
 
 RegisterHotkeys(*) {
@@ -170,10 +177,23 @@ LaunchItem(entry) {
         ToolTip("Prompt copied to clipboard")
         SetTimer((*) => ToolTip(), -1500)
     } else if (entry.kind = "utility") {
-        if (entry.target != "")
+        if (entry.HasOwnProp("action")) {
+            if (entry.action = "internal") {
+                DispatchInternalUtility(entry.target)
+            } else if (entry.action = "cmd") {
+                SafeRun("cmd.exe", "/c " . entry.target)
+                if (entry.HasOwnProp("feedback") && entry.feedback != "")
+                    ShowUtilityFeedback("✓ " . entry.feedback)
+            } else if (entry.action = "powershell") {
+                SafeRun("powershell.exe", "-NoProfile -Command " . entry.target)
+                if (entry.HasOwnProp("feedback") && entry.feedback != "")
+                    ShowUtilityFeedback("✓ " . entry.feedback)
+            }
+        } else if (entry.target != "") {
             SafeRun(entry.target)
-        else
+        } else {
             ToolTip("Unavailable")
+        }
     } else if (entry.kind = "script") {
         WinActivate("ahk_id " . entry.hwnd)
     } else if (entry.kind = "setting") {

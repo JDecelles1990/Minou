@@ -99,12 +99,22 @@ RefreshLauncherResults() {
         ResultsListView.Delete()
         VisibleEntries := Array()
 
+        if (CurrentCategory != "All") {
+            ResultsListView.ModifyCol(2, 140, "Subcategory")
+        } else {
+            ResultsListView.ModifyCol(2, 140, "Category")
+        }
+
         for entry in CurrentEntries {
             matchesCategory := (CurrentCategory = "All" || entry.category = CurrentCategory)
-            matchesQuery := (query = "" || InStr(entry.name, query, false) || InStr(entry.category, query, false))
+            matchesQuery := (query = "" 
+                || InStr(entry.name, query, false) 
+                || InStr(entry.category, query, false)
+                || (entry.HasOwnProp("subcategory") && InStr(entry.subcategory, query, false)))
             if (matchesCategory && matchesQuery) {
                 VisibleEntries.Push(entry)
-                ResultsListView.Add("", entry.name, entry.category)
+                secondCol := (CurrentCategory != "All" && entry.HasOwnProp("subcategory") && entry.subcategory != "") ? entry.subcategory : entry.category
+                ResultsListView.Add("", entry.name, secondCol)
             }
         }
 

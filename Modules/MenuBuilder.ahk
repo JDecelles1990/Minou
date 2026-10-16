@@ -40,10 +40,36 @@ BuildMenuEntries() {
         }
     }
 
-    for item in UtilityData {
-        name := item is Map ? item["name"] : item.name
-        cmd := item is Map ? item["cmd"] : item.cmd
-        entries.Push({ name: name, category: "Utilities", kind: "utility", target: cmd })
+    if (UtilityData is Map) {
+        for categoryName, subcategories in UtilityData {
+            if (subcategories is Map) {
+                for subcategoryName, items in subcategories {
+                    if (items is Array) {
+                        for item in items {
+                            name := item is Map ? item["name"] : item.name
+                            action := item is Map && item.Has("action") ? item["action"] : (item.HasOwnProp("action") ? item.action : "cmd")
+                            target := item is Map ? item["target"] : item.target
+                            feedback := item is Map && item.Has("feedback") ? item["feedback"] : (item.HasOwnProp("feedback") ? item.feedback : "")
+                            entries.Push({ name: name, category: categoryName, subcategory: subcategoryName, kind: "utility", action: action, target: target, feedback: feedback })
+                        }
+                    }
+                }
+            } else if (subcategories is Array) {
+                for item in subcategories {
+                    name := item is Map ? item["name"] : item.name
+                    action := item is Map && item.Has("action") ? item["action"] : (item.HasOwnProp("action") ? item.action : "cmd")
+                    target := item is Map ? item["target"] : item.target
+                    feedback := item is Map && item.Has("feedback") ? item["feedback"] : (item.HasOwnProp("feedback") ? item.feedback : "")
+                    entries.Push({ name: name, category: categoryName, subcategory: "General", kind: "utility", action: action, target: target, feedback: feedback })
+                }
+            }
+        }
+    } else if (UtilityData is Array) {
+        for item in UtilityData {
+            name := item is Map ? item["name"] : item.name
+            cmd := item is Map ? item["cmd"] : item.cmd
+            entries.Push({ name: name, category: "Utilities", subcategory: "General", kind: "utility", action: "cmd", target: cmd, feedback: "" })
+        }
     }
 
     entries.Push({ name: "Display", category: "Windows Settings", kind: "setting", target: "ms-settings:display" })

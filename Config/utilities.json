@@ -1,0 +1,154 @@
+{
+  "Network & SysAdmin": {
+    "DNS & Connectivity": [
+      {
+        "name": "Flush DNS Cache",
+        "action": "internal",
+        "target": "FlushDns",
+        "feedback": "DNS Cache Flushed"
+      },
+      {
+        "name": "Renew DHCP Lease",
+        "action": "cmd",
+        "target": "ipconfig /release && ipconfig /renew",
+        "feedback": "Renewing DHCP..."
+      },
+      {
+        "name": "Ping Gateway & DNS",
+        "action": "internal",
+        "target": "PingGatewayAndDns"
+      },
+      {
+        "name": "Copy Local & Public IP",
+        "action": "internal",
+        "target": "GetIpSummary"
+      }
+    ],
+    "Ports & Sockets": [
+      {
+        "name": "Show Listening Ports",
+        "action": "internal",
+        "target": "ShowListeningPorts"
+      },
+      {
+        "name": "Inspect Dev Ports (3000, 8080)",
+        "action": "internal",
+        "target": "InspectDevPorts"
+      },
+      {
+        "name": "Restart WSL2 Network",
+        "action": "cmd",
+        "target": "wsl.exe --shutdown",
+        "feedback": "WSL2 VM Shutdown"
+      }
+    ],
+    "Service & Shell Recovery": [
+      {
+        "name": "Restart Windows Explorer",
+        "action": "internal",
+        "target": "RestartExplorer",
+        "feedback": "Restarting Windows Explorer..."
+      },
+      {
+        "name": "Restart Audio Engine",
+        "action": "cmd",
+        "target": "net stop audiosrv & net start audiosrv",
+        "feedback": "Restarting Windows Audio Service..."
+      },
+      {
+        "name": "Kill Unresponsive Apps",
+        "action": "cmd",
+        "target": "taskkill /f /fi \"status eq not responding\"",
+        "feedback": "Terminated Unresponsive Apps"
+      },
+      {
+        "name": "Purge %TEMP% Files",
+        "action": "internal",
+        "target": "PurgeTempFiles"
+      }
+    ]
+  },
+  "Developer Tools": {
+    "Encoders & Generators": [
+      {
+        "name": "Generate UUID v4",
+        "action": "internal",
+        "target": "GenerateGuid"
+      },
+      {
+        "name": "Unix Timestamp (Epoch)",
+        "action": "internal",
+        "target": "GenerateUnixTimestamp"
+      },
+      {
+        "name": "URL Encode Clipboard",
+        "action": "internal",
+        "target": "UrlEncodeClipboard"
+      },
+      {
+        "name": "URL Decode Clipboard",
+        "action": "internal",
+        "target": "UrlDecodeClipboard"
+      },
+      {
+        "name": "Base64 Encode Clipboard",
+        "action": "internal",
+        "target": "Base64EncodeClipboard"
+      },
+      {
+        "name": "Base64 Decode Clipboard",
+        "action": "internal",
+        "target": "Base64DecodeClipboard"
+      },
+      {
+        "name": "SHA-256 Checksum",
+        "action": "internal",
+        "target": "GenerateSha256Clipboard"
+      }
+    ],
+    "Code & Data Formatting": [
+      {
+        "name": "Beautify Clipboard JSON",
+        "action": "internal",
+        "target": "BeautifyClipboardJson"
+      },
+      {
+        "name": "Minify Clipboard JSON",
+        "action": "internal",
+        "target": "MinifyClipboardJson"
+      },
+      {
+        "name": "Escape Code String",
+        "action": "internal",
+        "target": "EscapeClipboardString"
+      },
+      {
+        "name": "Capitalize SQL Keywords",
+        "action": "internal",
+        "target": "CapitalizeSqlKeywords"
+      }
+    ],
+    "Git & Environment": [
+      {
+        "name": "Open Terminal at Active Folder",
+        "action": "internal",
+        "target": "OpenTerminalAtActiveExplorer"
+      },
+      {
+        "name": "Git Status at Active Folder",
+        "action": "internal",
+        "target": "GitStatusAtActiveExplorer"
+      },
+      {
+        "name": "Inspect & Split %PATH%",
+        "action": "internal",
+        "target": "InspectPathEnvironment"
+      },
+      {
+        "name": "Toggle Hidden Files & Extensions",
+        "action": "internal",
+        "target": "ToggleExplorerHiddenAndExt"
+      }
+    ]
+  }
+}
