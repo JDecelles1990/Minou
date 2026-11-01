@@ -116,22 +116,27 @@ class JsonParser {
 
     ParseObject() {
         this.PositionValue += 1
-        map := Map()
+        resMap := Map()
         this.SkipWhitespace()
 
         if (this.PositionValue <= StrLen(this.Text) && SubStr(this.Text, this.PositionValue, 1) = "}") {
             this.PositionValue += 1
-            return map
+            return resMap
         }
 
         while (true) {
+            this.SkipWhitespace()
+            if (this.PositionValue <= StrLen(this.Text) && SubStr(this.Text, this.PositionValue, 1) = "}") {
+                this.PositionValue += 1
+                break
+            }
             key := this.ParseString()
             this.SkipWhitespace()
             if (this.PositionValue > StrLen(this.Text) || SubStr(this.Text, this.PositionValue, 1) != ":")
                 throw Error("Expected ':'")
             this.PositionValue += 1
             value := this.ParseValue()
-            map[key] := value
+            resMap[key] := value
             this.SkipWhitespace()
 
             if (this.PositionValue > StrLen(this.Text))
@@ -147,21 +152,26 @@ class JsonParser {
             this.PositionValue += 1
         }
 
-        return map
+        return resMap
     }
 
     ParseArray() {
         this.PositionValue += 1
-        array := Array()
+        resArr := Array()
         this.SkipWhitespace()
 
         if (this.PositionValue <= StrLen(this.Text) && SubStr(this.Text, this.PositionValue, 1) = "]") {
             this.PositionValue += 1
-            return array
+            return resArr
         }
 
         while (true) {
-            array.Push(this.ParseValue())
+            this.SkipWhitespace()
+            if (this.PositionValue <= StrLen(this.Text) && SubStr(this.Text, this.PositionValue, 1) = "]") {
+                this.PositionValue += 1
+                break
+            }
+            resArr.Push(this.ParseValue())
             this.SkipWhitespace()
 
             if (this.PositionValue > StrLen(this.Text))
@@ -177,7 +187,7 @@ class JsonParser {
             this.PositionValue += 1
         }
 
-        return array
+        return resArr
     }
 
     ParseString() {
@@ -235,7 +245,7 @@ class JsonParser {
         start := this.PositionValue
         while (this.PositionValue <= StrLen(this.Text)) {
             ch := SubStr(this.Text, this.PositionValue, 1)
-            if (ch = "-" || ch = "+" || ch = "." || ch = "e" || ch = "E" || (ch >= "0" && ch <= "9"))
+            if (ch = "-" || ch = "+" || ch = "." || ch = "e" || ch = "E" || IsDigit(ch))
                 this.PositionValue += 1
             else
                 break

@@ -67,7 +67,7 @@ GenerateGuid() {
 }
 
 GenerateUnixTimestamp() {
-    nowUtc := TimeAdd(A_NowUTC, 0, "Seconds")
+    nowUtc := DateAdd(A_NowUTC, 0, "Seconds")
     epochSec := DateDiff(nowUtc, "19700101000000", "Seconds")
     A_Clipboard := String(epochSec)
     ShowUtilityFeedback("✓ Copied Unix Timestamp: " . epochSec)
@@ -416,8 +416,28 @@ PingGatewayAndDns() {
     }
 }
 
+; Returns the first non-link-local IPv4 address of an enabled adapter ("Unknown" on failure).
+; (A_IPAddress1..4 were removed in AutoHotkey v2, so WMI is used instead.)
+GetLocalIpAddress() {
+    try {
+        wmi := ComObjGet("winmgmts:\\.\root\cimv2")
+        for adapter in wmi.ExecQuery("SELECT IPAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = TRUE") {
+            addresses := adapter.IPAddress
+            if (!IsObject(addresses))
+                continue
+            for address in addresses {
+                if (InStr(address, ".") && !InStr(address, "169.254."))
+                    return address
+            }
+        }
+    } catch Error as err {
+        return "Unknown"
+    }
+    return "Unknown"
+}
+
 GetIpSummary() {
-    localIp := A_IPAddress1
+    localIp := GetLocalIpAddress()
     publicIp := "Unknown"
     try {
         http := ComObject("WinHttp.WinHttpRequest.5.1")
@@ -426,6 +446,8 @@ GetIpSummary() {
         if (http.WaitForResponse(2)) {
             publicIp := Trim(http.ResponseText)
         }
+    } catch Error as err {
+        publicIp := "Unknown"
     }
     summary := "Local IP: " . localIp . " | Public IP: " . publicIp
     A_Clipboard := summary

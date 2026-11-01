@@ -82,10 +82,6 @@
     {
       "name": "Wireshark",
       "url": "https://www.wireshark.org"
-    },
-    {
-      "name": "PacketLife",
-      "url": "https://packetlife.net"
     }
   ],
 
@@ -125,10 +121,6 @@
   ],
 
   "Remote Support": [
-    {
-      "name": "Microsoft Quick Assist",
-      "url": "https://support.microsoft.com/windows/quick-assist"
-    },
     {
       "name": "AnyDesk",
       "url": "https://my.anydesk.com"
@@ -330,10 +322,6 @@
     {
       "name": "SOQUIJ",
       "url": "https://soquij.qc.ca"
-    },
-    {
-      "name": "JuriBistro",
-      "url": "https://juribistro.ca"
     },
     {
       "name": "Protecteur du citoyen",

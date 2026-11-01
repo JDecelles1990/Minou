@@ -1,6 +1,10 @@
 {
-    "Text": [
+    "Snippets": [
         { "name": "Email Signature", "text": "Kind regards,{ENTER}{DATE}" },
-        { "name": "Timestamp", "text": "{TIME}" }
+        { "name": "Timestamp", "text": "{TIME}" },
+        { "name": "ISO Date", "text": "{DATE}" },
+        { "name": "Date & Time", "text": "{DATE} {TIME}" },
+        { "name": "Email Greeting", "text": "Hello,{ENTER}{ENTER}Thank you for reaching out.{ENTER}{ENTER}" },
+        { "name": "Ticket Note Template", "text": "Ticket update - {DATE} {TIME}{ENTER}Issue: {ENTER}Troubleshooting performed: {ENTER}Resolution / next steps: {ENTER}" }
     ]
 }

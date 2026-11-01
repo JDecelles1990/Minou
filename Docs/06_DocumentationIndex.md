@@ -15,6 +15,7 @@ This document serves as the master directory and cross-reference catalog for all
 | [**04-Roadmap.md**](04-Roadmap.md) | Contributors | Feature milestones, dynamic software discovery, advanced snippet/prompt engines, diagnostics, and external integrations. |
 | [**05_ChangeLog.md**](05_ChangeLog.md) | All | Historical changelog following Keep a Changelog conventions and semantic versioning. |
 | [**06_DocumentationIndex.md**](06_DocumentationIndex.md) | All | Master reference index mapping and cross-linking the documentation repository. |
+| [**07_SectionsAudit.md**](07_SectionsAudit.md) | AI Agents & Maintainers | Complete map of all launcher sections, categories, entries, storage mapping, and audit test results. |
 | [**AGENTS.md**](../AGENTS.md) | AI Agents & Assistants | Root authority defining coding standards, modular boundaries, doc-sync rules, and validation protocols. |
 
 ---

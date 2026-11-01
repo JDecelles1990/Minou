@@ -34,20 +34,25 @@ Minou bridges keyboard-centric productivity with mouse-friendly contextual contr
 ```
 1. Clone or download this repository to a local path (e.g., C:\LAB\AHK\Minou\)
 2. Run Minou.ahk with AutoHotkey v2
-3. Press F3 — the launcher appears beside your cursor
+3. Press Alt + F3 — the launcher appears beside your cursor
 ```
 
-### Default Hotkeys
+### Default Hotkeys & Window Controls
 
-| Hotkey | Action |
+| Control / Hotkey | Action |
 | :--- | :--- |
-| `F3` | Open the launcher popup at the current mouse position |
-| `Shift + F3` | Open the launcher with search box pre-focused and cleared |
-| `Up` / `Down` | Navigate the results list |
-| `Enter` | Launch the selected item |
-| `Esc` | Close the launcher |
+| `Alt + F3` | Open the launcher popup at the current mouse position |
+| `Alt + Shift + F3` | Open the launcher with search box pre-focused and cleared |
+| `⚙` Button | Open the runtime Settings dialog (hotkeys & opacity slider) |
+| `_` Button | Minimize launcher to the taskbar |
+| `✕` Button | Hide launcher to system tray (keeps running in background) |
+| `✏ Edit` Button | Edit selected item's name, category, or sub-category |
+| `Left` / `Right` | Toggle between Section column and Name+Category column |
+| `Up` / `Down` | Scroll across sections (in Section column) or modules (in Results column) |
+| `Enter` | Focus modules (from Section column) or launch selected item (from Results) |
+| `Esc` | Close / hide the launcher |
 
-> Hotkeys are fully configurable in `Config/settings.json`.
+> Hotkeys and window opacity (default 80%) are fully configurable in `Config/settings.json` or via the `⚙` Settings GUI. Each of the 17 sections features its own high-contrast, distinct color palette for enhanced readability.
 
 ---
 
@@ -70,12 +75,13 @@ Minou/
 ├── Modules/                    # Feature modules
 │   ├── Json.ahk                # ✅ Pure AHK v2 OOP JSON parser & serializer
 │   ├── MenuBuilder.ahk         # ✅ Aggregates all data sources into unified entries
-│   ├── Launcher.ahk            # ✅ Custom dark Fluent GUI & keyboard event handlers
+│   ├── Launcher.ahk            # ✅ Custom dark Fluent GUI (title bar, ⚙ _ ✕) & keyboard handlers
+│   ├── Settings.ahk            # ✅ Runtime settings, hotkeys, opacity & Settings GUI
+│   ├── EntryEditor.ahk         # ✅ In-place name & category editor, JSON disk sync
 │   ├── Hotstrings.ahk          # ✅ Hotstring manager GUI & live registration
 │   ├── Utilities.ahk           # ✅ Native encoders, formatters, and sysadmin diagnostics
 │   ├── Icons.ahk               # 🔲 Stub — icon extraction & caching (planned)
 │   ├── Search.ahk              # 🔲 Stub — fuzzy search engine (planned)
-│   ├── Settings.ahk            # 🔲 Stub — settings UI & hotkey rebinding (planned)
 │   ├── Snippets.ahk            # 🔲 Stub — advanced snippet token engine (planned)
 │   ├── Prompts.ahk             # 🔲 Stub — markdown prompt loader (planned)
 │   └── WindowManager.ahk       # 🔲 Stub — multi-monitor placement (planned)
@@ -86,7 +92,7 @@ Minou/
 │
 ├── Plugins/                    # Drop-in third-party extension modules
 ├── Assets/Icons/               # Bundled SVG/PNG assets
-└── Docs/                       # Canonical project documentation
+└── Docs/                       # Canonical project documentation (see 07_SectionsAudit.md)
 ```
 
 > **Legend:** ✅ Implemented · 🔲 Planned stub (empty file, reserved for future milestone)
@@ -97,23 +103,41 @@ Minou/
 
 All configuration lives in the `Config/` directory as focused JSON files. No code changes are needed to add programs, URLs, or snippets.
 
-### `Config/settings.json` — Hotkeys & Theme
+### `Config/settings.json` — Hotkeys, Opacity & Theme
 
 ```json
 {
-  "hotkey": "F3",
-  "searchHotkey": "+F3",
-  "theme": "dark"
+  "hotkey": "!F3",
+  "searchHotkey": "!+F3",
+  "theme": "dark",
+  "opacity": 80
 }
 ```
+
+| Key | Default | Description |
+| :--- | :--- | :--- |
+| `hotkey` | `"!F3"` | Main launcher hotkey (**Alt+F3**) |
+| `searchHotkey` | `"!+F3"` | Direct search mode hotkey (**Alt+Shift+F3**) |
+| `theme` | `"dark"` | Dark theme |
+| `opacity` | `80` | Window opacity percentage (20-100) applied across Minou GUIs |
 
 ### `Config/config.json` — Programs, Folders & Utilities
 
 ```json
 {
   "programs": [
-    { "name": "VS Code",          "path": "C:\\Program Files\\Microsoft VS Code\\Code.exe" },
-    { "name": "Windows Terminal", "path": "wt.exe" }
+    { "name": "VS Code",          "path": "%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\Code.exe" },
+    { "name": "PowerShell",       "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" },
+    { "name": "Windows Terminal", "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe" },
+    { "name": "Microsoft Edge",   "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" },
+    { "name": "Notepad",          "path": "C:\\Program Files\\Notepad++\\notepad++.exe" },
+    { "name": "Snipping Tool",    "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\SnippingTool.exe" },
+    { "name": "Photos",           "path": "ms-photos:" },
+    { "name": "Paint",            "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\mspaint.exe" },
+    { "name": "ChatGPT",          "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\chatgpt-desktop.exe" },
+    { "name": "Antigravity",      "path": "%LOCALAPPDATA%\\Programs\\antigravity\\Antigravity.exe" },
+    { "name": "Word",             "path": "C:\\Program Files\\Git\\mingw64\\bin\\antiword.exe" },
+    { "name": "Settings",         "path": "C:\\Program Files\\Microsoft SQL Server Management Studio 22\\Release\\Common7\\ServiceHub\\Hosts\\ServiceHub.Host.AnyCPU\\ServiceHub.SettingsHost.exe" }
   ],
   "folders": [
     { "name": "Desktop",   "path": "%USERPROFILE%\\Desktop" },
@@ -219,8 +243,8 @@ Minou.ahk  →  InitMinou()
                 ├─ LoadConfiguration()     Parses all Config/*.json into memory
                 │   └─ RegisterHotstrings()  Activates hotstrings at boot
                 ├─ CreateLauncherGui()     Builds borderless dark GUI (hidden)
-                ├─ RegisterHotkeys()       Binds F3 / Shift+F3 from SettingsData
-                └─ SetupTrayMenu()         Tray: Show, Hotstrings, Edit, Reload, Exit
+                ├─ RegisterHotkeys()       Binds Alt+F3 / Alt+Shift+F3 from Settings.ahk
+                └─ SetupTrayMenu()         Tray: Show, Search, Settings, Hotstrings, Edit, Reload, Exit
 ```
 
 ### Global State
@@ -228,14 +252,14 @@ Minou.ahk  →  InitMinou()
 | Variable | Type | Source | Purpose |
 | :--- | :--- | :--- | :--- |
 | `ConfigData` | `Map` | `Config/config.json` | Programs, folders, utilities arrays |
-| `SettingsData` | `Map` | `Config/settings.json` | Hotkeys, theme |
+| `SettingsData` | `Map` | `Config/settings.json` | Hotkeys, theme, opacity |
 | `UrlData` | `Map` | `Config/urls.json` | Categorized bookmark collections |
 | `SnippetData` | `Map` | `Config/snippets.json` | Text template collections |
 | `PromptData` | `Array` | `Config/prompts.json` | LLM prompt objects |
 | `HotstringData` | `Array` | `Config/hotstrings.json` | Auto-expansion rules |
 | `ProgramData` | `Array` | Extracted from `ConfigData` | Program entries |
 | `FolderData` | `Array` | Extracted from `ConfigData` | Folder entries |
-| `UtilityData` | `Array` | Extracted from `ConfigData` | Utility entries |
+| `UtilityData` | `Map` | `Config/utilities.json` | Categorized & subcategorized utilities |
 | `CurrentEntries` | `Array` | `BuildMenuEntries()` | All normalized launchable items |
 | `VisibleEntries` | `Array` | `RefreshLauncherResults()` | Currently displayed filtered subset |
 | `AllSearchItems` | `Array` | Copy of `CurrentEntries` | Full searchable catalogue |
@@ -246,27 +270,35 @@ Every launchable item — regardless of source — is normalized by `MenuBuilder
 
 ```ahk
 {
-    name:     "Display Name",
-    category: "Category Label",
-    kind:     "url" | "program" | "folder" | "snippet" | "prompt" | "utility" | "setting" | "script",
-    target:   "Path / URL / Command / Text",
-    hwnd:     0x0   ; optional — for running AHK script windows
+    name:        "Display Name",
+    category:    "Category Label",
+    subcategory: "Subcategory Label", ; optional
+    kind:        "url" | "program" | "folder" | "snippet" | "prompt" | "utility" | "setting" | "script",
+    target:      "Path / URL / Command / Text",
+    src:         "urls" | "snippets" | "utilities" | "programs" | "folders" | "prompts", ; for editable items
+    ref:         itemMap, ; reference to in-memory collection item
+    hwnd:        0x0      ; optional — for running AHK script windows
 }
 ```
 
 ### GUI Layout
 
-The launcher is a borderless, always-on-top Fluent dark window (`+AlwaysOnTop +ToolWindow -Caption`):
+The launcher is a borderless, 80% transparent, always-on-top Fluent dark window (`+AlwaysOnTop -Caption +MinimizeBox +Border`):
 - **Background**: `0x1A1A1A` (near-black)
-- **Search Edit Box**: `0x232323` background, white text, Segoe UI 10pt — appears at `x12 y34 w560 h28`
-- **Category ListBox**: `170 × 280 px` at `x12 y72` — filters by category
-- **Results ListView**: `382 × 280 px` at `x190 y72` — *Name* (220 px) + *Category* (140 px)
-- **Footer hint**: `"F3 launch • Shift+F3 search • Enter run • Esc close"` at `x12 y360`
-- **Hotstrings button**: Quick access to Hotstring Manager at `x480 y355 w90 h24`
+- **Title Bar**: `x0 y0 w580 h36` with draggable header, title label, and top-right controls:
+  - ⚙ **Settings** (`ShowSettingsGui()`)
+  - `_` **Minimize** (`MinimizeLauncher()`)
+  - `✕` **Close** (`HideLauncher()` — hides to tray)
+- **Search Edit Box**: `0x232323` background, white text, Segoe UI 10pt — appears at `x12 y46 w560 h28`
+- **Category ListBox**: `170 × 270 px` at `x12 y84` (`+0x0010 +0x0040` owner-drawn) — renders each section in its distinctive color
+- **Results ListView**: `382 × 270 px` at `x190 y84` (`NM_CUSTOMDRAW`) — *Name* (220 px) + *Category/Subcategory* (140 px), both matching the parent section's color
+- **Footer hint**: Shows active hotkeys and navigation tips (`"Alt+F3 launch • ←/→ columns • ↑/↓ navigate • Enter run • Esc close"`) at `x12 y364`
+- **✏ Edit button**: In-place name & category editor at `x378 y360 w90 h26`
+- **Hotstrings button**: Quick access to Hotstring Manager at `x474 y360 w98 h26`
 
 The popup appears **20 px offset from the mouse cursor** and clamps to screen edges:
-- If `xPos + 600 > A_ScreenWidth` → `xPos = A_ScreenWidth - 620`
-- If `yPos + 400 > A_ScreenHeight` → `yPos = A_ScreenHeight - 420`
+- If `xPos + 600 > A_ScreenWidth` → `xPos = A_ScreenWidth - 600`
+- If `yPos + 412 > A_ScreenHeight` → `yPos = A_ScreenHeight - 412`
 
 ---
 
@@ -356,16 +388,17 @@ Calls `LoadJsonFile()` (from `Json.ahk`) for each config file into its correspon
 - Extracts `ProgramData`, `FolderData`, `UtilityData` as direct references from `ConfigData`
 
 #### `RegisterHotkeys()`
-Reads `hotkey` and `searchHotkey` from `SettingsData`, falling back to `"F3"` and `"+F3"`. Binds using AHK v2 lambda syntax:
+Defined in `Modules/Settings.ahk`. Reads `hotkey` and `searchHotkey` from `SettingsData`, falling back to `"Alt+F3"` (`!F3`) and `"Alt+Shift+F3"` (`!+F3`). Unbinds previous keys and binds the new ones using AHK v2 lambda syntax:
 ```ahk
-Hotkey(hotkeyMain,   (*) => ShowLauncherGui(false))
-Hotkey(hotkeySearch, (*) => ShowLauncherGui(true))
+Hotkey(hotkeyMain,   (*) => ShowLauncherGui(false), "On")
+Hotkey(hotkeySearch, (*) => ShowLauncherGui(true),  "On")
 ```
 
 #### `SetupTrayMenu()`
 Replaces the default AHK tray menu entirely with:
-- **Show Minou (F3)** → `ShowLauncherGui(false)`
-- **Search Mode (Shift+F3)** → `ShowLauncherGui(true)`
+- **Show Minou (Alt+F3)** → `ShowLauncherGui(false)`
+- **Search Mode (Alt+Shift+F3)** → `ShowLauncherGui(true)`
+- **Settings** → `ShowSettingsGui()`
 - **Hotstring Manager** → `ShowHotstringManager()`
 - *(separator)*
 - **Edit config** → opens `Config/config.json` in Notepad
@@ -758,15 +791,15 @@ Thin alias for `ApplyHotstrings()`. Called from `LoadConfiguration()` at startup
 
 ---
 
-### `Modules/Settings.ahk` — Settings UI & Runtime Configuration *(Stub)*
+### `Modules/Settings.ahk` — Settings UI & Runtime Configuration ✅
 
-**Status:** Empty file — reserved for Milestone 1.
+**Status:** Implemented.
 
-**Planned implementation:**
-- Interactive GUI for editing `Config/settings.json` without opening a text editor
-- Live hotkey rebinding (change F3 / Shift+F3 without restarting)
-- Theme selection and color customization
-- Save changes via `SaveJsonFile()` + `RegisterHotkeys()` re-invocation
+**Implemented features:**
+- Interactive GUI (`ShowSettingsGui()`) for editing `Config/settings.json` without opening a text editor
+- Live hotkey rebinding (change Alt+F3 / Alt+Shift+F3 without restarting)
+- Window opacity slider (20-100%, defaulting to 80%) with real-time preview
+- Save changes via `SaveJsonFile()` + `RegisterHotkeys()` re-invocation + footer update
 
 ---
 
@@ -776,11 +809,11 @@ Thin alias for `ApplyHotstrings()`. Called from `LoadConfiguration()` at startup
 
 **Planned implementation:**
 - Extend `PasteText()` with additional context-aware tokens:
-  - `{Selection}` — text highlighted by the user before pressing F3
+  - `{Selection}` — text highlighted by the user before pressing Alt+F3
   - `{ComputerName}` — `A_ComputerName`
   - `{Username}` — `A_UserName`
   - `{Name}` — prompted or user-configured display name
-- Snippet preview pane inside the launcher
+  - Snippet preview pane inside the launcher
 
 ---
 

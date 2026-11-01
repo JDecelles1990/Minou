@@ -1,5 +1,6 @@
 {
-    "hotkey": "F3",
-    "searchHotkey": "+F3",
-    "theme": "dark"
+    "hotkey": "!F3",
+    "searchHotkey": "!+F3",
+    "theme": "dark",
+    "opacity": 80
 }

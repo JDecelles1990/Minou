@@ -6,7 +6,7 @@ This document is the **root authority** for all AI coding assistants (such as An
 
 ## 1. Project Overview & Philosophy
 
-Minou is a modern, modular, dark-themed popup launcher and automation suite built with **AutoHotkey v2.0** for Windows 11. It blends keyboard-centric productivity (<kbd>F3</kbd>, <kbd>Shift</kbd> + <kbd>F3</kbd>) with mouse-friendly contextual controls.
+Minou is a modern, modular, dark-themed popup launcher and automation suite built with **AutoHotkey v2.0** for Windows 11. It blends keyboard-centric productivity (<kbd>Alt</kbd> + <kbd>F3</kbd>, <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>F3</kbd>) with mouse-friendly contextual controls.
 
 ### Guiding Principles
 - **Instant Response**: Launch latency must remain under 16ms. State is cached in memory; never read files synchronously inside hotkey handlers.
@@ -68,20 +68,30 @@ AutoHotkey v2 is a completely distinct, breaking language from v1. Under **no ci
 Minou/
 ├── Minou.ahk                # Root Orchestrator & Lifecycle Bootstrapper ONLY
 ├── Modules/                 # Feature-specific implementations
-│   ├── Launcher.ahk         # Custom dark GUI launcher & keyboard event handlers
-│   ├── MenuBuilder.ahk      # Data unification & menu entry formatting
+│   ├── Launcher.ahk         # Custom dark GUI launcher (title bar, ⚙ _ ✕ buttons) & keyboard handlers
+│   ├── MenuBuilder.ahk      # Data unification & menu entry formatting (sections/categories)
+│   ├── EntryEditor.ahk      # Edit entry names, categories & sub-categories (memory + disk)
 │   ├── Json.ahk             # Pure OOP JSON parser and serializer
 │   ├── Search.ahk           # Search algorithms & filtering engine
 │   ├── Icons.ahk            # Icon extraction & caching
-│   ├── Settings.ahk         # Runtime settings & hotkey bindings
+│   ├── Settings.ahk         # Runtime settings, hotkey bindings, opacity & Settings GUI
+│   ├── Hotstrings.ahk       # Hotstring manager GUI & runtime registration
 │   ├── Utilities.ahk        # Encoding, conversions & clipboard tools
 │   ├── WindowManager.ahk    # DPI & multi-monitor cursor placement
 │   ├── Snippets.ahk         # Dynamic token substitution engine
 │   └── Prompts.ahk          # Prompt file loading & clipboard injection
 ├── Config/                  # Active configuration files (JSON)
 ├── Cache/                   # Persistent caches (icons.db, recent.json)
-└── Docs/                    # Canonical documentation
+└── Docs/                    # Canonical documentation (see "App Architecture Reference" below)
 ```
+
+### App Architecture Reference (read before changing sections or entries)
+**[Docs/07_SectionsAudit.md](Docs/07_SectionsAudit.md)** is the canonical map of the launcher's content: every **section** (category), the **names of its entries**, the **JSON file/key that stores each one**, which fields are editable, and the audit/test result of every entry. Agents **must** read it before touching `MenuBuilder.ahk`, `EntryEditor.ahk` or any `Config/*.json`, and **must** update it in the same turn when a section or entry is added, removed, renamed or moved.
+
+Standing content rules:
+- Every section must contain **at least 4 entries**. Merge smaller sections into another one or extend them (the dynamic *Running Scripts* section is exempt).
+- Only list entries that were tested (HTTP status for links, `Test-Path` for programs/folders, function + `case` presence for internal utilities).
+- The launcher window is borderless: its title bar holds ⚙ (Settings), `_` (minimize) and ✕ (hide to tray). Default hotkeys are <kbd>Alt</kbd> + <kbd>F3</kbd> (launcher) and <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>F3</kbd> (search). Window opacity defaults to 80 % (`opacity` in `Config/settings.json`).
 
 ### Modular Boundary Rules
 - **Rule 3.1 (`Minou.ahk` Purity)**: `Minou.ahk` is strictly an orchestrator for lifecycle startup (`InitMinou`), global state declarations, and `#Include` directives. **Do not add new business logic, GUI controls, or utility algorithms directly to `Minou.ahk`.**
@@ -132,6 +142,7 @@ graph TD
 1. Determine which domain the change impacts. Identify or create the responsible module file under `Modules/` (e.g., `Modules/Search.ahk`, `Modules/Icons.ahk`, `Modules/Snippets.ahk`).
 2. Verify existing helpers in [Docs/03-Api-And-Helpers.md](Docs/03-Api-And-Helpers.md) to avoid duplicating utility routines.
 3. Keep `Minou.ahk` minimal: only add global state declarations or `#Include` directives to `Minou.ahk`.
+4. Read [Docs/07_SectionsAudit.md](Docs/07_SectionsAudit.md) to learn the current sections, entry names and which JSON file owns them.
 
 ### Phase 2: Safe AutoHotkey v2 Implementation
 1. Ensure all code strictly obeys Section 2 (AutoHotkey v2 Exclusive Standards).
@@ -154,12 +165,17 @@ Code and documentation must never diverge. In the **same turn** that any code or
 | Architecture, lifecycle, GUI layout, or state flow | [Docs/01-Architecture.md](Docs/01-Architecture.md) |
 | Completed features, new milestones, or backlog items | [Docs/04-Roadmap.md](Docs/04-Roadmap.md) & [Docs/05_ChangeLog.md](Docs/05_ChangeLog.md) |
 | New files, restructured modules, or added docs | [Docs/06_DocumentationIndex.md](Docs/06_DocumentationIndex.md) & [ReadMe.md](ReadMe.md) |
+| Sections, categories, or entry names added/removed/renamed/moved (any `Config/*.json` content change) | [Docs/07_SectionsAudit.md](Docs/07_SectionsAudit.md) |
 
 ### Phase 5: Verification & User Hand-off
 1. **Automated Syntax Check**:
-   Run the syntax validation command:
+   AutoHotkey v2.0.x has **no** `/validate` switch (it would simply start the script). Load the script with `/ErrorStdOut` and `#Warn` routed to stdout, wait a few seconds, and read the output. **Any warning or error is a failure**: an unhandled load-time warning (e.g. a removed built-in such as `A_IPAddress1`, or a v1 function such as `TimeAdd`) pops a blocking dialog and the app appears not to start.
    ```powershell
-   & "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /validate "Minou.ahk"
+   Set-Content _warn_tmp.ahk "#Warn All, StdOut`r`n#Include `"Minou.ahk`""
+   $p = Start-Process "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" -ArgumentList '/ErrorStdOut','_warn_tmp.ahk' -PassThru -WindowStyle Hidden -RedirectStandardOutput warn.txt -RedirectStandardError warn_err.txt
+   Start-Sleep 4; if (-not $p.HasExited) { $p.Kill() }
+   Get-Content warn.txt, warn_err.txt; Remove-Item _warn_tmp.ahk, warn.txt, warn_err.txt
    ```
+   (An empty result means the app loaded cleanly.)
 2. **Interactive Testing Prompt**:
-   Inform the user how to test the change live (e.g. summon with <kbd>F3</kbd>, search mode with <kbd>Shift</kbd> + <kbd>F3</kbd>, or right-click system tray $\rightarrow$ *Reload*).
+   Inform the user how to test the change live (e.g. summon with <kbd>Alt</kbd> + <kbd>F3</kbd>, search mode with <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>F3</kbd>, or right-click system tray $\rightarrow$ *Reload*).

@@ -56,6 +56,7 @@ ShowHotstringManager(*) {
     BtnSave.OnEvent("Click", (*) => SaveAllHotstrings())
 
     HotstringGui.Show("w524")
+    ApplyOpacity(HotstringGui)
 }
 
 ; ── Populate ListView from HotstringData ──────────────────────────────────────
@@ -143,6 +144,7 @@ ShowEditDialog(triggerVal, replacementVal, isEditing, targetRow) {
     }
 
     dlg.Show("w344")
+    ApplyOpacity(dlg)
 }
 
 ; ── Delete the selected row ───────────────────────────────────────────────────

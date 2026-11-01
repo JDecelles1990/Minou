@@ -35,21 +35,26 @@ Rather than maintaining a single monolithic JSON file, Minou splits configuratio
 
 ### `Config/settings.json`
 
-Controls global trigger hotkeys and interface presentation.
+Controls global trigger hotkeys and interface presentation. Every key can be changed from the launcher's ⚙ **Settings** window (`Modules/Settings.ahk`); changes are written back here immediately.
 
 ```json
 {
-  "hotkey": "F3",
-  "searchHotkey": "+F3",
-  "theme": "dark"
+  "hotkey": "!F3",
+  "searchHotkey": "!+F3",
+  "theme": "dark",
+  "opacity": 80
 }
 ```
 
 | Key | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `hotkey` | `String` | `"F3"` | Primary trigger — opens launcher at mouse cursor |
-| `searchHotkey` | `String` | `"+F3"` | Opens launcher with search box focused and cleared |
+| `hotkey` | `String` | `"!F3"` | Primary trigger (**Alt+F3**) — opens launcher at mouse cursor |
+| `searchHotkey` | `String` | `"!+F3"` | **Alt+Shift+F3** — opens launcher with search box focused and cleared |
 | `theme` | `String` | `"dark"` | GUI color scheme (currently only `"dark"` is implemented) |
+| `opacity` | `Integer` | `80` | Window opacity in percent (clamped to 20-100). Applied to the launcher, Settings, entry editor and Hotstring windows through `ApplyOpacity()` |
+
+> [!WARNING]
+> `StringifyJson()` writes the integers `1` and `0` as `true` / `false` (AutoHotkey booleans are integers). Never store a numeric setting whose valid value is `0` or `1`.
 
 **AHK hotkey notation:**
 - `"F3"` — plain F3 key
@@ -67,7 +72,7 @@ Defines desktop software, directory shortcuts, and system utility commands.
 ```json
 {
   "programs": [
-    { "name": "VS Code",          "path": "C:\\Program Files\\Microsoft VS Code\\Code.exe" },
+    { "name": "VS Code",          "path": "%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\Code.exe" },
     { "name": "Windows Terminal", "path": "wt.exe" },
     { "name": "PowerShell",       "path": "powershell.exe" }
   ],
@@ -90,7 +95,9 @@ Defines desktop software, directory shortcuts, and system utility commands.
 | Key | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `name` | `String` | ✅ | Display name shown in launcher |
-| `path` | `String` | ✅ | Executable path — supports environment variables (see § 3) |
+| `path` | `String` | ✅ | Executable path — supports environment variables (see § 3). Expanded by `BuildMenuEntries()` |
+| `category` | `String` | — | Optional section override. Default: `"Programs & Folders"`. Written by the entry editor only when it differs from the default |
+| `subcategory` | `String` | — | Optional sub-category override. Default: `"Programs"` |
 
 > If `FileExist(path)` returns false, `LaunchItem()` shows `"⚠ Not installed: <name>"` tooltip instead of failing silently.
 
@@ -100,6 +107,8 @@ Defines desktop software, directory shortcuts, and system utility commands.
 | :--- | :--- | :--- | :--- |
 | `name` | `String` | ✅ | Display name shown in launcher |
 | `path` | `String` | ✅ | Directory path — supports environment variables |
+| `category` | `String` | — | Optional section override. Default: `"Programs & Folders"` |
+| `subcategory` | `String` | — | Optional sub-category override. Default: `"Folders"` |
 
 > Folder paths are expanded via `ExpandEnvVars()` at `BuildMenuEntries()` time, so the resolved absolute path is stored in `entry.target`.
 
@@ -231,13 +240,14 @@ Maps category names to arrays of URL entries. Ideal for IT dashboards, cybersecu
 
 ### `Config/snippets.json`
 
-Stores quick text replacements and templates. Supports dynamic token substitutions.
+Stores quick text replacements and templates. Supports dynamic token substitutions. The default section is **`Snippets`** (renamed from `Text` on 2026-11-01 to satisfy the 4-entry minimum; see [07_SectionsAudit.md](07_SectionsAudit.md)). Any key is a section and can be created or renamed from the launcher's ✏ **Edit** dialog.
 
 ```json
 {
-  "Text": [
+  "Snippets": [
     { "name": "Email Signature", "text": "Kind regards,{ENTER}John Doe{ENTER}{DATE}" },
     { "name": "Timestamp",       "text": "{TIME}" },
+    { "name": "ISO Date",        "text": "{DATE}" },
     { "name": "Clipboard Wrap",  "text": "--- START ---{ENTER}{CLIPBOARD}{ENTER}--- END ---" }
   ],
   "Code": [

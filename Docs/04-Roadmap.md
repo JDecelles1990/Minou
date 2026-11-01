@@ -17,14 +17,16 @@ Before reviewing the roadmap, the following modules are **fully implemented** as
 | :--- | :--- | :--- | :--- |
 | JSON Engine | `Modules/Json.ahk` | ✅ Complete | Recursive-descent parser + serializer |
 | Menu Builder | `Modules/MenuBuilder.ahk` | ✅ Complete | 8-pass unified entry aggregator |
-| Launcher GUI | `Modules/Launcher.ahk` | ✅ Complete | Fluent dark GUI, search, keyboard nav |
+| Launcher GUI | `Modules/Launcher.ahk` | ✅ Complete | Fluent dark GUI, title bar (⚙ _ ✕), search, section colors, dual-column arrow navigation |
+| Settings Module | `Modules/Settings.ahk` | ✅ Complete | Runtime hotkey rebinding, opacity slider (80%), Settings GUI |
+| Entry Editor | `Modules/EntryEditor.ahk` | ✅ Complete | In-place name & category editor, disk JSON serialization |
 | Hotstrings | `Modules/Hotstrings.ahk` | ✅ Complete | GUI editor, JSON persistence, live registration |
 | Utilities Engine | `Modules/Utilities.ahk` | ✅ Complete | Native encoders, JSON formatters, sysadmin diagnostics |
 | Root Orchestrator | `Minou.ahk` | ✅ Complete | Lifecycle, `SafeRun`, `PasteText`, `LaunchItem` |
 
 The following are **empty stub files** awaiting milestone implementation:
 
-`Icons.ahk` · `Search.ahk` · `Settings.ahk` · `Snippets.ahk` · `Prompts.ahk` · `WindowManager.ahk`
+`Icons.ahk` · `Search.ahk` · `Snippets.ahk` · `Prompts.ahk` · `WindowManager.ahk`
 
 ---
 
@@ -86,22 +88,16 @@ InvalidateIconCache()      ; → void (clear and rebuild)
 
 ---
 
-### `Modules/Settings.ahk` — Interactive Settings UI
+### `Modules/Settings.ahk` — Interactive Settings UI ✅
 
-Allow users to change hotkeys, UI colors, and preferences without editing JSON directly.
+**Status: Complete** (Implemented with hotkeys rebinding, opacity slider, and live persistence).
 
-**Planned GUI elements:**
-- Hotkey Edit controls with live validation (prevent conflicts with existing system hotkeys)
-- Theme color pickers or preset selector
-- Toggle checkboxes for future options (e.g., show icons, show score, remember last search)
-- **Save** button: calls `SaveJsonFile(SettingsFile, SettingsData)` + `RegisterHotkeys()` to apply without restart
-
-**Public API:**
-```ahk
-ShowSettingsGui()               ; → void
-SaveSettings(newSettingsMap)    ; → void (persist + apply)
-ValidateHotkey(hk)              ; → Boolean (checks for conflicts)
-```
+Features implemented:
+- **Interactive Settings GUI:** Triggered via the title bar ⚙ button or the system tray menu.
+- **Hotkey Configuration:** Controls for main launcher (`!F3` / Alt+F3) and search mode (`!+F3` / Alt+Shift+F3).
+- **Opacity Slider:** 20% to 100% transparent slider with real-time preview (defaults to 80%).
+- **Live Rebinding:** Re-registers hotkeys and updates tray menu immediately without restarting the application.
+- **Persistence:** Synchronizes settings in memory and writes cleanly to `Config/settings.json`.
 
 ---
 

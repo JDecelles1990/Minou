@@ -1,8 +1,17 @@
 {
     "programs": [
-        { "name": "VS Code", "path": "C:\\Program Files\\Microsoft VS Code\\Code.exe" },
+        { "name": "VS Code", "path": "%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\Code.exe" },
         { "name": "PowerShell", "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" },
-        { "name": "Windows Terminal", "path": "C:\\Users\\Jo\\AppData\\Local\\Microsoft\\WindowsApps\\wt.exe" }
+        { "name": "Windows Terminal", "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe" },
+        { "name": "Microsoft Edge", "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" },
+        { "name": "Notepad", "path": "C:\\Program Files\\Notepad++\\notepad++.exe" },
+        { "name": "Snipping Tool", "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\SnippingTool.exe" },
+        { "name": "Photos", "path": "ms-photos:" },
+        { "name": "Paint", "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\mspaint.exe" },
+        { "name": "ChatGPT", "path": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\chatgpt-desktop.exe" },
+        { "name": "Antigravity", "path": "%LOCALAPPDATA%\\Programs\\antigravity\\Antigravity.exe" },
+        { "name": "Word", "path": "C:\\Program Files\\Git\\mingw64\\bin\\antiword.exe" },
+        { "name": "Settings", "path": "C:\\Program Files\\Microsoft SQL Server Management Studio 22\\Release\\Common7\\ServiceHub\\Hosts\\ServiceHub.Host.AnyCPU\\ServiceHub.SettingsHost.exe" }
     ],
     "folders": [
         { "name": "Desktop", "path": "%USERPROFILE%\\Desktop" },

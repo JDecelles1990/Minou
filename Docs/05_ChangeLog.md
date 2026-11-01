@@ -17,6 +17,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Section Color Differentiation & Visual Formatting (`Modules/Launcher.ahk`)
+- **Distinct Section Color Palette**: Assigned vibrant, readable, high-contrast colors (contrast ratio > 5.8:1 against `#232323`) to every one of the 17 launcher sections.
+- **Unified Name + Category Coloring**: In `ResultsListView`, both the **Name** and **Category / Subcategory** text are drawn in the exact parent section color using Win32 `NM_CUSTOMDRAW` (`-12`). Selected items display a subtle dark slate highlight (`0x3E3E3E`) while maintaining full text readability.
+- **Owner-Drawn Category List**: `CategoryListBox` uses Win32 `WM_DRAWITEM` (`+0x0010 +0x0040`) to render each section name in its matching section color, with "All" rendered in crisp off-white.
+
+#### Dual-Column Keyboard Navigation (`Modules/Launcher.ahk`)
+- **Left / Right Arrow Column Toggling**:
+  - <kbd>Left</kbd> arrow switches keyboard focus to the **Section column** (`CategoryListBox`).
+  - <kbd>Right</kbd> arrow switches keyboard focus to the **Name + Category column** (`ResultsListView`).
+  - Native cursor movement is preserved inside `SearchBox` whenever the user is actively typing a query.
+- **Up / Down Arrow Scrolling Across Sections & Modules**:
+  - In `CategoryListBox`: <kbd>Up</kbd> / <kbd>Down</kbd> scrolls through sections and immediately refreshes the displayed entries in real time.
+  - In `ResultsListView`: <kbd>Up</kbd> / <kbd>Down</kbd> scrolls through modules, scrolling into `SearchBox` when moving up from row 1.
+  - In `SearchBox`: <kbd>Down</kbd> drops focus directly into row 1 of `ResultsListView`.
+- **Context-Sensitive Enter Key**:
+  - Pressing <kbd>Enter</kbd> while on `CategoryListBox` focuses the results list on the first module of that section.
+  - Pressing <kbd>Enter</kbd> while on `ResultsListView` or `SearchBox` executes `RunSelectedEntry()`.
+
+#### Window Opacity Update to 80% (`Config/settings.json`, `Modules/Settings.ahk`)
+- Updated default window opacity from 85% to **80%** across `Config/settings.json`, `Modules/Settings.ahk` (`DefaultOpacityPercent := 80`), the interactive Settings slider, and documentation.
+
+#### Added Built-in Applications (`Config/config.json`)
+- Added 10 user-requested system and desktop applications to `Programs & Folders` with full environment variable resolution and `ms-` protocol URI dispatch:
+  - Microsoft Edge, PowerShell, Notepad++ (`C:\Program Files\Notepad++\notepad++.exe`), Snipping Tool, Photos (`ms-photos:`), Paint, ChatGPT, Antigravity, Word/antiword (`C:\Program Files\Git\mingw64\bin\antiword.exe`), and SSMS ServiceHub Settings.
+
+#### Custom Title Bar & Window Controls (`Modules/Launcher.ahk`)
+- **Title Bar with Window Controls**: Added a draggable header (`x0 y0 w580 h36 Background0x111111`) with custom controls:
+  - ⚙ **Settings Emoji Button**: Opens the runtime Settings GUI dialog.
+  - `_` **Minimize Button**: Minimizes the window to the taskbar (`LauncherGui.Minimize()`).
+  - `✕` **Close Button**: Hides the launcher to the system tray (`HideLauncher()`), keeping hotkeys and tray background services active.
+- **Title Bar Dragging**: Implemented `WM_LBUTTONDOWN` (`0x0201`) handling to allow dragging the borderless window anywhere along its title bar.
+
+#### Runtime Settings & Opacity Module (`Modules/Settings.ahk`)
+- **Interactive Settings GUI (`ShowSettingsGui()`)**: Allows configuring the primary launcher hotkey, search-mode hotkey, and window opacity without manually editing JSON.
+- **Window Opacity (85%)**: Added `opacity` configuration (defaulting to 85%), with `ApplyOpacity()` utilizing `WinSetTransparent()` across all Minou windows and an interactive live slider in Settings.
+- **Live Hotkey Rebinding**: Hotkeys can be rebound at runtime through `RegisterHotkeys()` without restarting the application; automatically rolls back if an invalid key sequence is entered.
+- **Default Hotkey Update**: Changed default launch hotkey to **Alt+F3** (`"!F3"`) and search hotkey to **Alt+Shift+F3** (`"!+F3"`).
+
+#### In-Place Section & Entry Editor (`Modules/EntryEditor.ahk`)
+- **`ShowEntryEditor()`**: Added an **✏ Edit** button on the launcher footer that opens a dedicated dialog to edit the selected item's name, category, and sub-category.
+- **Real-time Dual Sync**: Updates in-memory collections and persists modifications to the responsible `Config/*.json` file (`urls.json`, `snippets.json`, `utilities.json`, `config.json`, `prompts.json`).
+- **Category Autocomplete**: Dropdown pre-populates existing categories and allows typing a new category name to re-categorize items.
+
+#### Architecture & Sections Audit (`Docs/07_SectionsAudit.md`)
+- **Full Sections Audit**: Created comprehensive audit documenting every category, entry name, owning JSON file, editable fields, and automated test result.
+- **4-Item Section Enforcement**: Merged `Programs` (3) and `Folders` (3) into `Programs & Folders` (6); renamed `Text` to `Snippets` and expanded to 6 entries.
+- **Dead Link Removal**: Cleaned up dead links (`PacketLife`, `JuriBistro`, `Microsoft Quick Assist`).
+- **Resolved Pathing**: Corrected VS Code executable path using `%LOCALAPPDATA%` and expanded environment variables in `ProgramData`.
+
+### Fixed
+- **`TimeAdd` Syntax Error**: Corrected invalid v1 function call to AutoHotkey v2 `DateAdd()` in `GenerateUnixTimestamp()`.
+- **Removed `A_IPAddress1` Variable**: Implemented `GetLocalIpAddress()` using WMI to eliminate blocking load-time warning dialogs.
+- **`ParseNumber()` JSON Bug**: Updated `JsonParser.ParseNumber()` to use `IsDigit()` instead of invalid string comparison `ch >= "0"` which threw errors in AHK v2 on closing brackets.
+
 #### Core Architecture
 - **Modular system**: Refactored the 789-line monolithic `Minou AHK` prototype into a clean, multi-file modular system with `Minou.ahk` as a minimal orchestrator and discrete module files under `Modules/`
 - **Root orchestrator** `Minou.ahk`: Declares all global variables (`ConfigData`, `SettingsData`, `UrlData`, `SnippetData`, `PromptData`, `HotstringData`, `ProgramData`, `FolderData`, `UtilityData`, `CurrentEntries`, `VisibleEntries`, etc.) and includes modules via `#Include`

@@ -61,12 +61,13 @@ Minou/
 ├── Modules/                        # Feature modules
 │   ├── Json.ahk          ✅        # OOP JSON parser & serializer (JsonParser, StringifyJson)
 │   ├── MenuBuilder.ahk   ✅        # Aggregates all data sources into unified entry records
-│   ├── Launcher.ahk      ✅        # Custom dark Fluent GUI & keyboard event handlers
+│   ├── Settings.ahk      ✅        # Hotkeys (live rebinding), opacity, Settings GUI (⚙ button)
+│   ├── EntryEditor.ahk   ✅        # ✏ Edit dialog: rename / re-categorize entries, saves to Config/*.json
+│   ├── Launcher.ahk      ✅        # Custom dark Fluent GUI, title bar (⚙ _ ✕) & keyboard event handlers
 │   ├── Hotstrings.ahk    ✅        # Text expansion manager and GUI editor
 │   ├── Utilities.ahk     ✅        # Native encoders, formatters, and sysadmin diagnostics
 │   ├── Icons.ahk         🔲        # (Planned) Local icon extraction & shell caching
 │   ├── Search.ahk        🔲        # (Planned) Fuzzy search engine across all item types
-│   ├── Settings.ahk      🔲        # (Planned) Runtime configuration & hotkey manager
 │   ├── WindowManager.ahk 🔲        # (Planned) Multi-monitor placement & window activation
 │   ├── Snippets.ahk      🔲        # (Planned) Advanced template & token substitution engine
 │   └── Prompts.ahk       🔲        # (Planned) Markdown prompt loader and clipboard injector
@@ -87,6 +88,7 @@ Minou/
     ├── 04-Roadmap.md               # Development milestones
     ├── 05_ChangeLog.md             # Version history
     ├── 06_DocumentationIndex.md    # Master cross-reference index
+    ├── 07_SectionsAudit.md         # Sections, entry names, categories & test results (content map)
     └── AGENTS.md                   # Documentation-level AI agent rules
 ```
 
@@ -149,21 +151,20 @@ Config file → global variable mapping:
 Constructs the borderless, always-on-top Fluent GUI in `Modules/Launcher.ahk`. Window is built once and hidden — `Hide()`/`Show()` is used thereafter, never `Destroy()`/recreate. See [§ 5. GUI Layout](#5-gui-layout--window-positioning) for exact control coordinates.
 
 #### 4. `RegisterHotkeys()`
-Reads `SettingsData["hotkey"]` and `SettingsData["searchHotkey"]` with fallback defaults:
+Defined in `Modules/Settings.ahk`. Reads `hotkey` / `searchHotkey` through `GetSetting()` with fallback defaults **Alt+F3** (`"!F3"`) and **Alt+Shift+F3** (`"!+F3"`), disables previously bound hotkeys, then binds the new ones. It is re-run by the Settings window, so hotkeys change live without a restart:
 ```ahk
-hotkeyMain   := SettingsData.Has("hotkey")       ? SettingsData["hotkey"]       : "F3"
-hotkeySearch := SettingsData.Has("searchHotkey") ? SettingsData["searchHotkey"] : "+F3"
-Hotkey(hotkeyMain,   (*) => ShowLauncherGui(false))
-Hotkey(hotkeySearch, (*) => ShowLauncherGui(true))
+Hotkey(hotkeyMain,   (*) => ShowLauncherGui(false), "On")
+Hotkey(hotkeySearch, (*) => ShowLauncherGui(true),  "On")
 ```
 
 #### 5. `SetupTrayMenu()`
-Completely replaces the default AHK tray menu:
+Completely replaces the default AHK tray menu (labels reflect the configured hotkeys):
 
 | Menu Item | Action |
 | :--- | :--- |
-| Show Minou (F3) | `ShowLauncherGui(false)` |
-| Search Mode (Shift+F3) | `ShowLauncherGui(true)` |
+| Show Minou (Alt+F3) | `ShowLauncherGui(false)` |
+| Search Mode (Alt+Shift+F3) | `ShowLauncherGui(true)` |
+| Settings | `ShowSettingsGui()` |
 | Hotstring Manager | `ShowHotstringManager()` |
 | *(separator)* | — |
 | Edit config | `Run("notepad.exe " . ConfigFile)` |
@@ -185,6 +186,15 @@ Minou.ahk
     │
     ├── #Include Modules\MenuBuilder.ahk   (depends on: Minou.ahk globals, Json.ahk)
     │       └── BuildMenuEntries()         ← called by RefreshLauncherData()
+    │
+    ├── #Include Modules\Settings.ahk      (depends on: Json.ahk; calls Launcher.ahk at runtime)
+    │       ├── RegisterHotkeys()          ← called by InitMinou & Settings GUI
+    │       ├── ApplyOpacity()             ← used by every Minou window
+    │       └── ShowSettingsGui()          ← ⚙ button & tray
+    │
+    ├── #Include Modules\EntryEditor.ahk   (depends on: MenuBuilder.ahk entries, Json.ahk)
+    │       ├── ShowEntryEditor()          ← ✏ Edit button
+    │       └── ApplyEntryEdit()           ← mutates entry.ref, calls SaveJsonFile()
     │
     ├── #Include Modules\Launcher.ahk      (depends on: MenuBuilder.ahk, Minou.ahk globals)
     │       ├── CreateLauncherGui()        ← called by InitMinou
@@ -296,28 +306,26 @@ Every launchable item across all sources is normalized by `BuildMenuEntries()` i
 
 ## 6. GUI Layout & Window Positioning
 
-The launcher GUI is a **580 × 390 px** borderless, always-on-top Fluent window. Controls are positioned with fixed coordinates:
+The launcher GUI is a **580 × 392 px** borderless, always-on-top Fluent window with a custom, draggable title bar and **80 % opacity** (`opacity` in `Config/settings.json`, applied with `WinSetTransparent`). Controls are positioned with fixed coordinates:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐  ← y=0
-│ Minou Launcher                                              │  ← Text x12 y10
-│ ┌───────────────────────────────────────────────────────┐   │  ← Edit x12 y34 w560 h28
+│ Minou Launcher                                  ⚙   _   ✕  │  ← title bar y0-36 (drag here)
+│ ┌───────────────────────────────────────────────────────┐   │  ← Edit x12 y46 w560 h28
 │ │ Search...                                             │   │    Background 0x232323
 │ └───────────────────────────────────────────────────────┘   │
-│ ┌──────────────────┐ ┌───────────────────────────────────┐  │  ← y=72
+│ ┌──────────────────┐ ┌───────────────────────────────────┐  │  ← y=84
 │ │ All              │ │ Name              │ Category       │  │
-│ │ Programs         │ │ VS Code           │ Programs       │  │
-│ │ Folders          │ │ Windows Terminal  │ Programs       │  │
+│ │ Programs & Fold. │ │ VS Code           │ Programs & F.. │  │
 │ │ Cybersecurity    │ │ VirusTotal        │ Cybersecurity  │  │
 │ │ Prompts          │ │ Debug Code        │ Prompts        │  │
-│ │ Snippets         │ │ Email Signature   │ Text           │  │
-│ │ Utilities        │ │ Calculator        │ Utilities      │  │
+│ │ Snippets         │ │ Email Signature   │ Snippets       │  │
+│ │ Network & Sys..  │ │ Flush DNS Cache   │ Network & Sys. │  │
 │ │ Windows Settings │ │ Display           │ Windows Sett.. │  │
 │ │ Running Scripts  │ │ ...               │ ...            │  │
-│ └──────────────────┘ └───────────────────────────────────┘  │  ← y=352
-│ ← w170             → ← w382, x190                       →   │
-│ F3 launch • Shift+F3 search • Enter run • Esc close [Hstr]  │  ← y=355-360
-└─────────────────────────────────────────────────────────────┘  ← y=390
+│ └──────────────────┘ └───────────────────────────────────┘  │  ← y=354
+│ Alt+F3 launch • Alt+Shift+F3 search…   [✏ Edit] [Hotstrings]│  ← y=360-386
+└─────────────────────────────────────────────────────────────┘  ← y=392
 ← x=0                                                    x=580 →
 ```
 
@@ -325,51 +333,89 @@ The launcher GUI is a **580 × 390 px** borderless, always-on-top Fluent window.
 
 | Control | Type | Position | Size | Style |
 | :--- | :--- | :--- | :--- | :--- |
-| Title label | `Text` | x12 y10 | w560 | `cC0C0C0` |
-| Search box | `Edit` | x12 y34 | w560 h28 | `Background0x232323 cWhite` |
-| Category filter | `ListBox` | x12 y72 | w170 h280 | `Background0x232323 cWhite` |
-| Results | `ListView` | x190 y72 | w382 h280 | `Background0x232323 cWhite Grid` |
-| Footer hint | `Text` | x12 y360 | w560 | `c808080` |
-| Hotstrings button | `Button` | x480 y355 | w90 h24 | — |
+| Title bar fill | `Text` | x0 y0 | w580 h36 | `Background0x111111` (click-through → drag via `WM_LBUTTONDOWN`) |
+| Title label | `Text` | x12 y8 | w300 | `cC0C0C0 Bold` |
+| ⚙ Settings | `Text` (clickable) | x480 y3 | w32 h30 | `Segoe UI Emoji` → `ShowSettingsGui()` |
+| `_` Minimize | `Text` (clickable) | x514 y3 | w32 h30 | → `MinimizeLauncher()` |
+| ✕ Close | `Text` (clickable) | x546 y3 | w32 h30 | → `HideLauncher()` (hide to tray) |
+| Search box | `Edit` | x12 y46 | w560 h28 | `Background0x232323 cWhite` |
+| Category filter | `ListBox` | x12 y84 | w170 h270 | `Background0x232323 cWhite` |
+| Results | `ListView` | x190 y84 | w382 h270 | `Background0x232323 cWhite Grid` |
+| Footer hint | `Text` | x12 y364 | w360 | `s8 c808080` (built from the configured hotkeys) |
+| ✏ Edit button | `Button` | x378 y360 | w90 h26 | → `ShowEntryEditor()` |
+| Hotstrings button | `Button` | x474 y360 | w98 h26 | → `ShowHotstringManager()` |
+
+**Window style:** `+AlwaysOnTop -Caption +MinimizeBox +Border`. `+MinimizeBox` (without `+ToolWindow`) lets the `_` button minimize the window to the taskbar; `ShowLauncherGui()` restores it.
 
 **Column widths in ResultsListView:**
 - Column 1 "Name": 220 px
-- Column 2 "Category": 140 px
+- Column 2 "Category" (or "Subcategory" when a category is selected): 140 px
 
 ### Positioning Algorithm
 
 ```ahk
 MouseGetPos(&mouseX, &mouseY)
-xPos := mouseX + 20                              ; 20px right of cursor
-yPos := mouseY + 20                              ; 20px below cursor
-if (xPos + 600 > A_ScreenWidth)                  ; prevent clipping right edge
-    xPos := A_ScreenWidth - 620
-if (yPos + 400 > A_ScreenHeight)                 ; prevent clipping bottom edge
-    yPos := A_ScreenHeight - 420
-LauncherGui.Show("x" . xPos . " y" . yPos . " w580 h390")
+xPos := mouseX + 20                                        ; 20px right of cursor
+yPos := mouseY + 20                                        ; 20px below cursor
+if (xPos + LauncherWidth + 20 > A_ScreenWidth)             ; prevent clipping right edge
+    xPos := A_ScreenWidth - LauncherWidth - 20
+if (yPos + LauncherHeight + 20 > A_ScreenHeight)           ; prevent clipping bottom edge
+    yPos := A_ScreenHeight - LauncherHeight - 20
+LauncherGui.Show("x" . xPos . " y" . yPos . " w580 h392")
+ApplyOpacity(LauncherGui)
 ```
 
 ### Focus Handling
 
 | Trigger | `searchMode` | Behavior |
 | :--- | :--- | :--- |
-| `F3` | `false` | Show at cursor, refresh results, keep last search |
-| `Shift+F3` | `true` | Show at cursor, clear search box, focus search box |
-| Tray → Show | `false` | Same as `F3` |
+| `Alt+F3` | `false` | Show at cursor, refresh results, keep last search |
+| `Alt+Shift+F3` | `true` | Show at cursor, clear search box, focus search box |
+| Tray → Show | `false` | Same as `Alt+F3` |
 
-### Context-Sensitive Keyboard Navigation
+### Title-Bar Buttons, Settings & Entry Editor
 
-Navigation keys are only active when the launcher window has focus, using `#HotIf`:
+| Element | Behavior |
+| :--- | :--- |
+| ⚙ | Opens the Settings window (`Modules/Settings.ahk`): hotkeys (live rebinding), opacity slider (20-100 %), reset to defaults. Saved to `Config/settings.json` |
+| `_` | Minimizes the launcher (taskbar button) |
+| ✕ | Hides the launcher to the tray. The process and hotkeys stay active; use tray → **Exit** to quit |
+| ✏ Edit | Opens the Entry Editor (`Modules/EntryEditor.ahk`) for the selected row: rename, change category / sub-category. Mutates the live `Map` referenced by `entry.ref` and saves the owning `Config/*.json` immediately. Built-in entries (Windows Settings, Running Scripts) are read-only |
+
+### Context-Sensitive Keyboard Navigation & Column Toggling
+
+Navigation keys are context-aware and toggle smoothly between columns:
+- **Left Arrow (`Left`)**: Shifts keyboard focus to the **Section column** (`CategoryListBox`).
+- **Right Arrow (`Right`)**: Shifts keyboard focus to the **Name + Category column** (`ResultsListView`).
+- **Up / Down Arrows (`Up` / `Down`)**:
+  - When in `CategoryListBox`: scrolls across sections, instantly updating results for that category.
+  - When in `ResultsListView`: scrolls across modules/entries (or moves up to `SearchBox` if at row 1).
+  - When in `SearchBox`: `Down` drops focus down into `ResultsListView` (row 1). Native Left/Right caret editing is preserved whenever the search box contains text.
+- **Enter (`Enter`)**:
+  - In `CategoryListBox`: switches focus to `ResultsListView`.
+  - In `ResultsListView` or `SearchBox`: launches the selected item via `RunSelectedEntry()`.
 
 ```ahk
 #HotIf IsLauncherActive()
-Up::MoveSelection(-1)
-Down::MoveSelection(1)
-Enter::RunSelectedEntry()
+Up::HandleLauncherUp()
+Down::HandleLauncherDown()
+Enter::HandleLauncherEnter()
+#HotIf
+
+#HotIf ShouldHandleLauncherLeft()
+Left::FocusSectionColumn()
+#HotIf
+
+#HotIf ShouldHandleLauncherRight()
+Right::FocusResultsColumn()
 #HotIf
 ```
 
-`IsLauncherActive()` returns `LauncherGui != "" && WinActive("ahk_id " . LauncherGui.Hwnd)`.
+### Distinct Section Color Palette & Formatting
+
+Each of the 17 sections features a distinct, WCAG AA compliant (contrast > 5.8:1) color palette on the dark `#1A1A1A` / `#232323` background:
+- **ResultsListView**: Rendered via Win32 `NM_CUSTOMDRAW` (`-12`). Both the **Name** (column 1) and **Category / Subcategory** (column 2) share the parent section's color. When selected, items receive a clean dark slate highlight (`0x3E3E3E`) while maintaining the section's text color.
+- **CategoryListBox**: Rendered via Win32 `WM_DRAWITEM` (`+0x0010 +0x0040`), displaying each section in its distinctive color, with "All" rendered in crisp off-white (`#E0E0E0`).
 
 ---
 

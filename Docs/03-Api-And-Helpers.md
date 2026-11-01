@@ -181,22 +181,22 @@ For full config schema details, see [02-Configuration.md](02-Configuration.md).
 
 ---
 
-### `RegisterHotkeys()`
+### `RegisterHotkeys()` → Boolean (`Modules/Settings.ahk`)
 
-Binds F3 and Shift+F3 (or values from `SettingsData`) to launcher show functions:
+Moved from `Minou.ahk` to `Modules/Settings.ahk` (Rule 3.1). Disables every hotkey in `ActiveHotkeys`, then binds the launcher and search hotkeys from `SettingsData`, so it is safe to call again after a rebind (no restart needed):
 
 ```ahk
-Hotkey(hotkeyMain,   (*) => ShowLauncherGui(false))
-Hotkey(hotkeySearch, (*) => ShowLauncherGui(true))
+Hotkey(hotkeyMain,   (*) => ShowLauncherGui(false), "On")
+Hotkey(hotkeySearch, (*) => ShowLauncherGui(true),  "On")
 ```
 
-Falls back to `"F3"` and `"+F3"` if keys are absent or empty in `SettingsData`.
+Falls back to `"!F3"` (**Alt+F3**) and `"!+F3"` (**Alt+Shift+F3**) if keys are absent or empty. Returns `false` (after a `MsgBox`) if AutoHotkey rejects a hotkey string.
 
 ---
 
 ### `SetupTrayMenu()`
 
-Deletes the default AHK tray menu and rebuilds with Minou-specific items. For the complete menu item list, see [01-Architecture.md § 3, Step 5](01-Architecture.md).
+Deletes the default AHK tray menu and rebuilds with Minou-specific items (labels show the live hotkeys via `HotkeyToText()`; includes a **Settings** item). For the complete menu item list, see [01-Architecture.md § 3, Step 5](01-Architecture.md).
 
 ---
 
@@ -206,18 +206,23 @@ Deletes the default AHK tray menu and rebuilds with Minou-specific items. For th
 
 Builds the dark Fluent GUI window once. If called when `LauncherGui` already exists, destroys and recreates it.
 
-**Window style:** `+AlwaysOnTop +ToolWindow -Caption` — borderless, always on top, excluded from taskbar and Alt+Tab.
+**Window style:** `+AlwaysOnTop -Caption +MinimizeBox +Border` — borderless and always on top. `+MinimizeBox` (and no `+ToolWindow`) lets the `_` button minimize it to the taskbar. Geometry constants: `LauncherWidth := 580`, `LauncherHeight := 392`, `LauncherTitleHeight := 36`.
 
 **Controls added in order:**
 
 | Control | Variable | Position | Size | Style |
 | :--- | :--- | :--- | :--- | :--- |
-| `Text` (title) | — | x12 y10 | w560 | `cC0C0C0` |
-| `Edit` (search) | `SearchBox` | x12 y34 | w560 h28 | `Background0x232323 cWhite` |
-| `ListBox` (categories) | `CategoryListBox` | x12 y72 | w170 h280 | `Background0x232323 cWhite` |
-| `ListView` (results) | `ResultsListView` | x190 y72 | w382 h280 | `Background0x232323 cWhite Grid` |
-| `Text` (footer) | — | x12 y360 | w560 | `c808080` |
-| `Button` (hotstrings) | — | x480 y355 | w90 h24 | — |
+| `Text` (title bar fill) | — | x0 y0 | w580 h36 | `Background0x111111` |
+| `Text` (title) | — | x12 y8 | w300 | `cC0C0C0 Bold` |
+| `Text` ⚙ (Settings) | `BtnSettings` | x480 y3 | w32 h30 | `Segoe UI Emoji`, clickable (`+0x100`) |
+| `Text` `_` (minimize) | `BtnMinimize` | x514 y3 | w32 h30 | clickable → `MinimizeLauncher()` |
+| `Text` ✕ (close) | `BtnClose` | x546 y3 | w32 h30 | clickable → `HideLauncher()` |
+| `Edit` (search) | `SearchBox` | x12 y46 | w560 h28 | `Background0x232323 cWhite` |
+| `ListBox` (categories) | `CategoryListBox` | x12 y84 | w170 h270 | `Background0x232323 cWhite` |
+| `ListView` (results) | `ResultsListView` | x190 y84 | w382 h270 | `Background0x232323 cWhite Grid` |
+| `Text` (footer hint) | `LauncherHint` | x12 y364 | w360 | `s8 c808080` |
+| `Button` ✏ Edit | — | x378 y360 | w90 h26 | → `ShowEntryEditor()` |
+| `Button` Hotstrings | — | x474 y360 | w98 h26 | → `ShowHotstringManager()` |
 
 **Event bindings:**
 
@@ -226,9 +231,27 @@ Builds the dark Fluent GUI window once. If called when `LauncherGui` already exi
 | `Change` | `SearchBox` | `RefreshLauncherResults()` |
 | `Change` | `CategoryListBox` | `OnCategoryChange()` |
 | `DoubleClick` | `ResultsListView` | `RunSelectedEntry()` |
-| `Close` | `LauncherGui` | `LauncherGui.Hide()` |
-| `Escape` | `LauncherGui` | `LauncherGui.Hide()` |
+| `Close` / `Escape` | `LauncherGui` | `HideLauncher()` |
+| `Click` | ⚙ | `ShowSettingsGui()` |
+| `Click` | `_` | `MinimizeLauncher()` |
+| `Click` | ✕ | `HideLauncher()` (hides to tray; the app keeps running) |
+| `Click` | ✏ Edit | `ShowEntryEditor()` |
 | `Click` | Hotstrings `Button` | `ShowHotstringManager()` |
+| `WM_LBUTTONDOWN` (0x0201) | `LauncherGui` | `OnLauncherLButtonDown()` — drags the window from the title bar |
+
+---
+
+### `UpdateLauncherHint()`
+
+Rewrites the footer text from the configured hotkeys, e.g. `Alt+F3 launch • Alt+Shift+F3 search • Enter run • Esc close`. Called at creation and after Settings are saved.
+
+### `HideLauncher()` / `MinimizeLauncher()`
+
+`HideLauncher()` hides the window (✕ button, `Esc`, Gui `Close`). `MinimizeLauncher()` calls `LauncherGui.Minimize()` (`_` button). `ShowLauncherGui()` restores a minimized window before showing it.
+
+### `OnLauncherLButtonDown(wParam, lParam, msg, hwnd)`
+
+`OnMessage(0x0201)` handler. A click on the empty title-bar area (`y <= LauncherTitleHeight`) posts `WM_NCLBUTTONDOWN` / `HTCAPTION` so the borderless window can be dragged.
 
 ---
 
@@ -246,27 +269,30 @@ ShowLauncherGui(true)    ; Search mode — clear & focus search box
 2. `RefreshLauncherData()` — rebuild entries from current config
 3. `MouseGetPos(&mouseX, &mouseY)` — screen-relative coordinates
 4. Calculate position with `+20` offset, clamp to screen boundaries
-5. `LauncherGui.Show("x... y... w580 h390")`
-6. If `searchMode`: `SearchBox.Value := ""` + `SearchBox.Focus()`
-7. `RefreshLauncherResults()` — populate immediately
+5. `LauncherGui.Restore()` if minimized, then `LauncherGui.Show("x... y... w580 h392")`
+6. `ApplyOpacity(LauncherGui)` — configured opacity (default 80 %)
+7. If `searchMode`: `SearchBox.Value := ""` + `SearchBox.Focus()`
+8. `RefreshLauncherResults()` — populate immediately
 
 For position clamping formulas, see [01-Architecture.md § 6](01-Architecture.md).
 
 ---
 
-### `RefreshLauncherData()`
+### `RefreshLauncherData(keepCategory := false)`
 
-Called every time the launcher is shown. Rebuilds the full entry list and repopulates the category list:
+Called every time the launcher is shown (and after an edit). Rebuilds the full entry list and repopulates the category list:
 
 ```ahk
 CurrentEntries := BuildMenuEntries()    ; fresh data from all sources
 AllSearchItems := CurrentEntries        ; cached full catalogue
-CurrentCategory := "All"               ; reset filter
+CurrentCategory := "All"               ; reset filter (unless keepCategory restores it)
 CategoryListBox.Delete()
 CategoryListBox.Add(["All"])
 ; extract unique categories from CurrentEntries
-CategoryListBox.Choose(1)              ; select "All"
+CategoryListBox.Choose(1)              ; select "All" (or the kept category)
 ```
+
+`keepCategory := true` re-selects the previously selected category when it still exists (used by `ShowEntryEditor()` so the list does not jump back to "All").
 
 ---
 
@@ -303,14 +329,45 @@ Event handler for `CategoryListBox` changes. Reads `CategoryListBox.Text` into `
 
 ---
 
-### `MoveSelection(offset)`
+### `GetSectionColor(categoryName) → Integer`
 
-Keyboard navigation. Moves the ListView selection by `offset` rows (`+1` = Down, `-1` = Up), clamped to `[1, GetCount()]`.
+Returns the 24-bit Win32 COLORREF (`0x00BBGGRR`) associated with a given section name from the `SectionColors` map. Used by both `OnResultsListViewCustomDraw` and `OnLauncherDrawItem`. Returns default silver-white `0xE0E0E0` for "All" or unknown categories.
 
-```ahk
-MoveSelection(-1)   ; Up arrow
-MoveSelection(1)    ; Down arrow
-```
+---
+
+### `OnLauncherDrawItem(wParam, lParam, msg, hwnd)`
+
+Handles `WM_DRAWITEM` (`0x002B`) for `CategoryListBox` (`+0x0010 +0x0040` owner-drawn style). Renders each category text using its distinctive section color and dark background (`0x232323` default, `0x3E3E3E` when selected).
+
+---
+
+### `OnResultsListViewCustomDraw(guiCtrl, lParam)`
+
+Handles `NM_CUSTOMDRAW` (`-12`) for `ResultsListView`. Colors both the "Name" (column 1) and "Category/Subcategory" (column 2) in the matching parent section's color, while setting a subtle dark slate highlight (`0x3E3E3E`) when selected.
+
+---
+
+### `FocusSectionColumn()` & `FocusResultsColumn()`
+
+Column navigation helpers:
+- `FocusSectionColumn()`: Sets keyboard focus to `CategoryListBox` and ensures an item is selected.
+- `FocusResultsColumn()`: Sets keyboard focus to `ResultsListView` and ensures a row is highlighted with `Select Focus Vis`.
+
+---
+
+### `MoveCategorySelection(offset)` & `MoveResultsSelection(offset)`
+
+- `MoveCategorySelection(offset)`: Navigates `CategoryListBox` by `offset` (`-1` = Up, `+1` = Down), clamped to `[1, LB_GETCOUNT]`, and calls `OnCategoryChange()` to update results live.
+- `MoveResultsSelection(offset)`: Navigates `ResultsListView` by `offset`. Clamped to `[1, GetCount()]`. If pressing Up from row 1, smoothly moves focus up into `SearchBox`.
+
+---
+
+### `HandleLauncherUp()`, `HandleLauncherDown()`, `HandleLauncherEnter()`
+
+Context-aware key event dispatchers:
+- **`Up`**: Navigates sections when in `CategoryListBox`, moves up in `ResultsListView` (or into `SearchBox` if at top).
+- **`Down`**: Navigates sections when in `CategoryListBox`, drops into `ResultsListView` from `SearchBox`, or moves down in `ResultsListView`.
+- **`Enter`**: If in `CategoryListBox`, switches focus to `ResultsListView`. If in `ResultsListView` or `SearchBox`, executes `RunSelectedEntry()`.
 
 ---
 
@@ -324,19 +381,29 @@ Executes the currently highlighted ListView row:
 
 ---
 
-### `IsLauncherActive() → Boolean`
+### `IsLauncherActive()`, `ShouldHandleLauncherLeft()`, `ShouldHandleLauncherRight()`
 
-`#HotIf` context predicate. Returns `true` only when the launcher window exists and is the active foreground window.
+`#HotIf` context predicates:
+- `IsLauncherActive()`: Returns `true` only when the launcher window exists and is the active foreground window.
+- `ShouldHandleLauncherLeft()`: Returns `true` unless `SearchBox` is focused with non-empty text, preserving native cursor editing inside the search edit box while allowing Left arrow to switch to the section column elsewhere.
+- `ShouldHandleLauncherRight()`: Returns `true` unless `SearchBox` is focused with non-empty text, allowing Right arrow to switch to the results column.
 
-```ahk
-return LauncherGui != "" && WinActive("ahk_id " . LauncherGui.Hwnd)
-```
-
-**Context-sensitive hotkeys using this predicate:**
+**Context-sensitive hotkeys:**
 ```ahk
 #HotIf IsLauncherActive()
-Up::MoveSelection(-1)
-Down::MoveSelection(1)
+Up::HandleLauncherUp()
+Down::HandleLauncherDown()
+Enter::HandleLauncherEnter()
+#HotIf
+
+#HotIf ShouldHandleLauncherLeft()
+Left::FocusSectionColumn()
+#HotIf
+
+#HotIf ShouldHandleLauncherRight()
+Right::FocusResultsColumn()
+#HotIf
+```
 Enter::RunSelectedEntry()
 #HotIf
 ```
@@ -354,13 +421,21 @@ Aggregates all data sources into a single flat array of normalized entry objects
 | Pass | Source Global | Category | `kind` |
 | :--- | :--- | :--- | :--- |
 | 1 | `UrlData` (Map) | JSON key name | `"url"` |
-| 2 | `ProgramData` (Array) | `"Programs"` | `"program"` |
-| 3 | `FolderData` (Array) | `"Folders"` | `"folder"` |
-| 4 | `SnippetData` (Map) | JSON key name | `"snippet"` |
-| 5 | `PromptData` (Array) | `"Prompts"` | `"prompt"` |
-| 6 | `UtilityData` (Array) | `"Utilities"` | `"utility"` |
+| 2 | `ProgramData` (Array) | item `category` or `"Programs & Folders"` (sub-category `"Programs"`) | `"program"` |
+| 3 | `FolderData` (Array) | item `category` or `"Programs & Folders"` (sub-category `"Folders"`) | `"folder"` |
+| 4 | `SnippetData` (Map) | JSON key name (default `"Snippets"`) | `"snippet"` |
+| 5 | `PromptData` (Array) | `"Prompts"` (sub-category = item `category`) | `"prompt"` |
+| 6 | `UtilityData` (Map; legacy Array) | JSON key name (legacy: `"Utilities"`) | `"utility"` |
 | 7 | Hardcoded `ms-settings:` URIs | `"Windows Settings"` | `"setting"` |
 | 8 | `WinGetList("ahk_class AutoHotkey")` | `"Running Scripts"` | `"script"` |
+
+**Editable entries** (passes 1-6, except the legacy utilities array) additionally carry `src` (`"urls"`, `"snippets"`, `"utilities"`, `"programs"`, `"folders"`, `"prompts"`) and `ref` (the live `Map` from the owning collection). `EntryEditor.ahk` mutates `ref` in place. Entries without `src` (Windows Settings, Running Scripts, legacy utilities) are read-only. The full section/entry catalogue is in [07_SectionsAudit.md](07_SectionsAudit.md).
+
+#### `ItemField(item, key, defaultValue := "") → Any`
+Reads a field from a `Map` (`item.Has(key)`) or an object (`item.HasOwnProp(key)`), returning `defaultValue` when missing. Replaces the old per-field `item is Map ? ... : ...` guards.
+
+#### `ProgramsFoldersCategory`
+Global string `"Programs & Folders"` — the merged section for programs and folders.
 
 **Hardcoded Windows Settings entries (Pass 7):**
 
@@ -388,18 +463,18 @@ for hwnd in WinGetList("ahk_class AutoHotkey") {
 
 **Dual Map/Object access pattern:**
 
-Each item property is read with a compatibility guard to handle both `Map` objects (from JSON) and AHK `Object` instances (from inline object literals):
+Each item property is read through `ItemField()` so both `Map` objects (from JSON) and AHK `Object` instances (from inline object literals) work:
 
 ```ahk
-name := item is Map ? item["name"] : item.name
-path := item is Map ? item["path"] : item.path
+name := ItemField(item, "name")
+path := ItemField(item, "path")
 ```
 
-**Folder path expansion:**
+**Program / folder path expansion:**
 
-`FolderData` entries run through `ExpandEnvVars()` at build time:
+`ProgramData` and `FolderData` entries both run through `ExpandEnvVars()` at build time (programs were previously unexpanded, which broke `%LOCALAPPDATA%` paths):
 ```ahk
-entries.Push({ name: name, category: "Folders", kind: "folder", target: ExpandEnvVars(path) })
+entries.Push({ name: ..., kind: "folder", target: ExpandEnvVars(ItemField(item, "path")), src: "folders", ref: item })
 ```
 
 ---
@@ -484,7 +559,7 @@ Throws on: unterminated string, invalid escape sequence, invalid `\u` sequence.
 
 #### `ParseNumber() → Integer | Float`
 
-Reads characters `[0-9.\-+eE]` until a non-numeric character, then calls `Number(textValue)` to convert. Throws `Error("Invalid number")` if the extracted substring is empty.
+Reads characters `[0-9.\-+eE]` (digits are tested with `IsDigit()`; comparing a non-numeric character such as `}` with `>= "0"` throws in AutoHotkey v2) until a non-numeric character, then calls `Number(textValue)` to convert. Throws `Error("Invalid number")` if the extracted substring is empty.
 
 #### `ParseLiteral(literal, value) → Any`
 
@@ -721,6 +796,46 @@ Gets the selected row from `HotstringListView`, reads its text values, and calls
 
 ---
 
+## 7b. Settings Module (`Modules/Settings.ahk`) ✅
+
+Owns hotkey bindings, window opacity and the Settings GUI. Every mutation updates `SettingsData` **and** `Config/settings.json`.
+
+| Function / Global | Description |
+| :--- | :--- |
+| `DefaultHotkey := "!F3"`, `DefaultSearchHotkey := "!+F3"`, `DefaultOpacityPercent := 80` | Built-in defaults used when a key is missing from `settings.json` |
+| `ActiveHotkeys` (Array) | Hotkey strings currently bound by `RegisterHotkeys()` |
+| `GetSetting(key, defaultValue := "")` | Reads a value from `SettingsData`, falling back to the default when absent/empty |
+| `SetSetting(key, value)` | Writes to `SettingsData` and serializes via `SaveJsonFile(SettingsFile, SettingsData)` |
+| `HotkeyToText(hk) → String` | `"!+F3"` → `"Alt+Shift+F3"` (used for the footer hint and tray labels) |
+| `RegisterHotkeys() → Boolean` | (Re)binds both hotkeys; disables previous ones first; `false` on invalid hotkey |
+| `GetOpacityPercent() → Integer` | Reads `opacity`, clamps to 20-100, default 80 |
+| `ApplyOpacity(guiObj, percent := "")` | `WinSetTransparent(Round(255 * percent / 100), "ahk_id " . guiObj.Hwnd)`; used by the launcher, Settings, entry editor and Hotstring windows |
+| `ShowSettingsGui(*)` | Settings window (launcher ⚙ button or tray **Settings**): two `Hotkey` controls, an opacity slider (20-100, live preview), **Save**, **Reset defaults**, **Cancel**. Save validates, persists, rebinds hotkeys live (rolling back on failure), refreshes the footer hint and tray menu |
+| `CloseSettingsGui()` | Destroys the window and restores the persisted opacity |
+
+> `Hotkey` controls do not support `Background`/color options (AutoHotkey raises "Not supported for this control type").
+
+---
+
+## 7c. Entry Editor (`Modules/EntryEditor.ahk`) ✅
+
+Edits names, categories and sub-categories of launcher entries in place. Requires entries built by `BuildMenuEntries()` that carry `src` and `ref`.
+
+| Function | Description |
+| :--- | :--- |
+| `ShowEntryEditor(*)` | Opens the **✏ Edit** dialog for the selected row (`VisibleEntries[row]`). Fields: Name, Category (editable `ComboBox` pre-filled with existing categories; type a new one to create it), and Sub-category for `utilities`, `prompts`, `programs`, `folders`. Built-in entries show a tooltip instead |
+| `CloseEntryEditor()` | Destroys the dialog |
+| `ApplyEntryEdit(entry, newName, newCategory, newSub) → Boolean` | Mutates `entry.ref`, moves it between categories when needed, then calls `SaveJsonFile()` on the owning file (`urls.json`, `snippets.json`, `utilities.json`, `config.json`, `prompts.json`). Shows a `MsgBox` and returns `false` on failure |
+| `EntryHasSubcategory(entry)` / `EntryCategoryLocked(entry)` | Capability checks (prompts: category locked to `"Prompts"`) |
+| `MoveItemBetweenCategories(catMap, oldCategory, newCategory, item)` | For `Map(category → Array)` data (URLs, snippets); empty categories are deleted |
+| `MoveUtilityItem(utilData, entry, newCategory, newSub)` | Same for `Map(category → Map(sub → Array))` utilities; converts a legacy flat category on demand |
+| `SetOrClearField(item, key, value, defaultValue)` | Stores an override only when it differs from the built-in default (keeps `config.json` clean) |
+| `RemoveItemFromArray(arr, item)` | Identity-based removal helper |
+
+After a successful edit the launcher calls `RefreshLauncherData(true)` + `RefreshLauncherResults()`.
+
+---
+
 ## 8. Stub Modules (Planned API Surfaces)
 
 These modules are empty files reserved for future implementation. Their planned public API is documented here to guide development. See [04-Roadmap.md](04-Roadmap.md) for milestones.
@@ -738,13 +853,6 @@ These modules are empty files reserved for future implementation. Their planned 
 ; GetIcon(entry) → HICON handle or image path string
 ; ExtractExeIcon(path) → HICON
 ; FetchFavicon(url) → file path in Cache/
-```
-
-### `Modules/Settings.ahk` (Planned)
-
-```ahk
-; ShowSettingsGui() → void
-; SaveSettings(newSettings) → void   ; calls SaveJsonFile + RegisterHotkeys()
 ```
 
 ### `Modules/WindowManager.ahk` (Planned)
@@ -803,7 +911,7 @@ Routes utility string triggers (from `Config/utilities.json` entries with `"acti
 Generates a compliant UUID v4 string via native COM `ole32\CoCreateGuid`, copies to `A_Clipboard`, and shows non-intrusive feedback.
 
 #### `GenerateUnixTimestamp() → Integer`
-Calculates seconds since Unix epoch (`1970-01-01 00:00:00 UTC`) via `DateDiff()`, copies to `A_Clipboard`, and returns value.
+Calculates seconds since Unix epoch (`1970-01-01 00:00:00 UTC`) via `DateDiff(DateAdd(A_NowUTC, 0, "Seconds"), "19700101000000", "Seconds")`, copies to `A_Clipboard`, and returns value. (Previously called the non-existent `TimeAdd()`.)
 
 #### `UrlEncode(str) → String` / `UrlDecode(str) → String`
 Converts arbitrary strings into RFC-3986 percent-encoded URL strings via UTF-8 memory buffer, and reverses percent sequences. `UrlEncodeClipboard()` and `UrlDecodeClipboard()` apply directly to `A_Clipboard`.
@@ -860,7 +968,10 @@ Runs `ipconfig /flushdns` in a hidden process and confirms via tooltip.
 Runs parallel ICMP test to `1.1.1.1` and `8.8.8.8` via PowerShell and copies latency measurements to clipboard.
 
 #### `GetIpSummary()`
-Retrieves local adapter IPv4 via `A_IPAddress1` and queries public IP via `api.ipify.org` using `WinHttp.WinHttpRequest.5.1`.
+Retrieves the local adapter IPv4 via `GetLocalIpAddress()` and queries the public IP via `api.ipify.org` using `WinHttp.WinHttpRequest.5.1`.
+
+#### `GetLocalIpAddress() → String`
+Returns the first non-link-local (`169.254.x.x`) IPv4 address of an enabled adapter using WMI (`Win32_NetworkAdapterConfiguration`), or `"Unknown"`. Replaces `A_IPAddress1`, which was removed in AutoHotkey v2 and caused a blocking load-time warning dialog at startup.
 
 #### `ShowListeningPorts()`
 Runs `netstat -ano -p tcp` filtered to `LISTENING`, copies the full output to clipboard, and displays a formatted preview.

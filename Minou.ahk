@@ -4,6 +4,7 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 Persistent
+InstallKeybdHook()
 
 CoordMode "Mouse", "Screen"
 SetWorkingDir A_ScriptDir
@@ -39,6 +40,8 @@ CurrentCategory := "All"
 #Include "Modules\Json.ahk"
 #Include "Modules\Utilities.ahk"
 #Include "Modules\MenuBuilder.ahk"
+#Include "Modules\Settings.ahk"
+#Include "Modules\EntryEditor.ahk"
 #Include "Modules\Launcher.ahk"
 #Include "Modules\Hotstrings.ahk"
 
@@ -50,6 +53,7 @@ InitMinou(*) {
     CreateLauncherGui()
     RegisterHotkeys()
     SetupTrayMenu()
+    ShowStartupNotification()
 }
 
 SetMenuDarkMode(*) {
@@ -71,7 +75,7 @@ SetMenuDarkMode(*) {
 }
 
 LoadConfiguration(*) {
-    global ConfigData, SettingsData, UrlData, SnippetData, PromptData, ProgramData, FolderData, UtilityData
+    global ConfigData, SettingsData, UrlData, SnippetData, PromptData, HotstringData, ProgramData, FolderData, UtilityData
     ConfigData := LoadJsonFile(ConfigFile, Map())
     SettingsData := LoadJsonFile(SettingsFile, Map())
     UrlData := LoadJsonFile(UrlsFile, Map())
@@ -97,30 +101,29 @@ LoadConfiguration(*) {
     }
 }
 
-RegisterHotkeys(*) {
-    global SettingsData
-    hotkeyMain := "F3"
-    hotkeySearch := "+F3"
-    if (SettingsData.Has("hotkey") && SettingsData["hotkey"] != "")
-        hotkeyMain := SettingsData["hotkey"]
-    if (SettingsData.Has("searchHotkey") && SettingsData["searchHotkey"] != "")
-        hotkeySearch := SettingsData["searchHotkey"]
-
-    Hotkey(hotkeyMain, (*) => ShowLauncherGui(false))
-    Hotkey(hotkeySearch, (*) => ShowLauncherGui(true))
-}
-
 SetupTrayMenu(*) {
+    global DefaultHotkey, DefaultSearchHotkey
     Tray := A_TrayMenu
     Tray.Delete()
-    Tray.Add("Show Minou (F3)", (*) => ShowLauncherGui(false))
-    Tray.Add("Search Mode (Shift+F3)", (*) => ShowLauncherGui(true))
+    showLabel := "Show Minou (" . HotkeyToText(GetSetting("hotkey", DefaultHotkey)) . ")"
+    Tray.Add(showLabel, (*) => ShowLauncherGui(false))
+    Tray.Add("Search Mode (" . HotkeyToText(GetSetting("searchHotkey", DefaultSearchHotkey)) . ")", (*) => ShowLauncherGui(true))
+    Tray.Add("Settings", (*) => ShowSettingsGui())
     Tray.Add("Hotstring Manager", (*) => ShowHotstringManager())
     Tray.Add()
     Tray.Add("Edit config", (*) => Run("notepad.exe " . Chr(34) . ConfigFile . Chr(34)))
     Tray.Add("Reload", (*) => Reload())
     Tray.Add("Exit", (*) => ExitApp())
-    A_IconTip := "Minou Popup"
+    Tray.Default := showLabel
+    Tray.ClickCount := 1
+    A_IconTip := "Minou Popup (" . HotkeyToText(GetSetting("hotkey", DefaultHotkey)) . ")"
+}
+
+ShowStartupNotification() {
+    global DefaultHotkey
+    hkText := HotkeyToText(GetSetting("hotkey", DefaultHotkey))
+    TrayTip("Minou is active", "Press " . hkText . " to open, or click this tray icon.", "Mute")
+    SetTimer((*) => TrayTip(), -3500)
 }
 
 ExpandEnvVars(path) {
@@ -145,7 +148,7 @@ SafeRun(target, args := "") {
     if (target = "")
         return
     try {
-        if (InStr(target, "http://") || InStr(target, "https://") || InStr(target, "ms-settings:") || InStr(target, "shell:")) {
+        if (InStr(target, "http://") || InStr(target, "https://") || InStr(target, "ms-") || InStr(target, "shell:")) {
             Run(target)
         } else if (FileExist(target)) {
             Run(target)
@@ -164,7 +167,7 @@ LaunchItem(entry) {
     if (entry.kind = "url") {
         SafeRun(entry.target)
     } else if (entry.kind = "program") {
-        if (entry.target != "" && FileExist(entry.target))
+        if (entry.target != "" && (FileExist(entry.target) || InStr(entry.target, "ms-") || InStr(entry.target, "shell:")))
             SafeRun(entry.target)
         else
             ToolTip("⚠ Not installed: " . entry.name)
